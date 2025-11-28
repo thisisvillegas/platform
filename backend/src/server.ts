@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { auth } from 'express-oauth2-jwt-bearer';
 import { lambdaService } from './lambdaService'
+import { databaseService } from './database';
+
 // Load environment variables
 dotenv.config();
 
@@ -13,11 +15,15 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Auth0 JWT validation middleware (we'll enable this later)
-// const jwtCheck = auth({
-//   audience: process.env.AUTH0_AUDIENCE,
-//   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-// });
+// COnnect to MongoDB
+databaseService.connect().catch(console.error)
+
+const jwtCheck = auth({
+    audience: process.env.AUTH0_AUDIENCE,
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+});
+
+app.use('/api', jwtCheck);
 
 // Health check endpoint (no auth required)
 app.get('/health', (req: Request, res: Response) => {
@@ -32,6 +38,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.get('/api/races/upcoming', async (req: Request, res: Response) => {
     try {
         // TODO: Call MotoGP and F1 Lambda functions
+        // const races = await lambdaService.getAllUpcomingRaces();
         // For now, return mock data
         const mockRaces = {
             motogp: [
@@ -85,15 +92,25 @@ app.get('/api/weather', async (req: Request, res: Response) => {
 // Get user preferences
 app.get('/api/preferences', async (req: Request, res: Response) => {
     try {
-        // TODO: Get user ID from Auth0 token
-        // TODO: Fetch from MongoDB
-        const mockPreferences = {
-            favoriteTeams: ['Ferrari', 'Ducati'],
-            notifications: true,
-            theme: 'dark'
-        };
+        // Extract user ID from Auth0 token
+        const userId = req.auth?.payload.sub;
 
-        res.json(mockPreferences);
+        if (!userId) {
+            return res.status(401).json({ error: 'User ID not found in token' });
+        }
+
+        const preferences = await databaseService.getUserPreferences(userId);
+
+        // If no preferences exist yet, return defaults
+        if (!preferences) {
+            return res.json({
+                favoriteTeams: [],
+                notifications: true,
+                theme: 'dark'
+            });
+        }
+
+        res.json(preferences);
     } catch (error) {
         console.error('Error fetching preferences:', error);
         res.status(500).json({ error: 'Failed to fetch preferences' });
@@ -103,10 +120,19 @@ app.get('/api/preferences', async (req: Request, res: Response) => {
 // Update user preferences
 app.put('/api/preferences', async (req: Request, res: Response) => {
     try {
-        const preferences = req.body;
+        const userId = req.auth?.payload.sub;
 
-        // TODO: Get user ID from Auth0 token
-        // TODO: Update in MongoDB
+        if (!userId) {
+            return res.status(401).json({ error: 'User ID not found in token' });
+        }
+
+        const { favoriteTeams, notifications, theme } = req.body;
+
+        const preferences = await databaseService.updateUserPreferences(userId, {
+            favoriteTeams,
+            notifications,
+            theme,
+        });
 
         res.json({ message: 'Preferences updated successfully', preferences });
     } catch (error) {
