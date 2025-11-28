@@ -1,0 +1,19 @@
+{
+    "name": "weather-lambda",
+    "version": "1.0.0",
+    "description": "Lambda function to fetch weather data",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "package": "npm run build && cd dist && zip -r ../weather-lambda.zip .",
+        "deploy": "aws lambda update-function-code --function-name weather-lambda --zip-file fileb://weather-lambda.zip"
+    },
+    "dependencies": {
+        "axios": "^1.6.2"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.131",
+        "@types/node": "^20.10.4",
+        "typescript": "^5.3.3"
+    }
+}

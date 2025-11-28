@@ -1,0 +1,4 @@
+node_modules
+dist
+weather-lambda.zip
+.env
