@@ -10,7 +10,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: racing-dashboard-frontend
+  S3_BUCKET: home-frontend-thisisvillegas
 
 jobs:
   deploy:

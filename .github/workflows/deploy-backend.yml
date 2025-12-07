@@ -10,9 +10,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: racing-dashboard-backend
-  ECS_CLUSTER: racing-dashboard-cluster3
-  ECS_SERVICE: racing-dashboard-service
+  ECR_REPOSITORY: home-backend
+  ECS_CLUSTER: home-cluster
+  ECS_SERVICE: home-backend-task-service
 
 jobs:
   deploy:
