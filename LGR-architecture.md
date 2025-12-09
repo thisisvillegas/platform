@@ -1,12 +1,12 @@
 # Let's Go Racing - Architecture Documentation
 
-**Last Updated:** 2024-11-30  
-**Version:** 2.0.0  
+**Last Updated:** 2025-12-07
+**Version:** 2.1.0
 **Project:** Full-Stack Racing Dashboard Application
 
 ---
 
-## ðŸ“‹ Document Overview
+## 📋 Document Overview
 
 This is the comprehensive architecture documentation for the **Let's Go Racing** project - a full-stack racing dashboard application that aggregates data from MotoGP and F1 races, provides weather information, and manages user preferences.
 
@@ -14,7 +14,7 @@ This is the comprehensive architecture documentation for the **Let's Go Racing**
 
 ---
 
-## ðŸ—ï¸ Architecture Overview
+## 🏗️ Architecture Overview
 
 ### System Architecture Pattern
 **Full-Stack Single Page Application (SPA) with Microservices Backend**
@@ -28,43 +28,43 @@ The application follows a modern full-stack architecture:
 
 ### High-Level System Diagram
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚     Angular Frontend (SPA)          â”‚
-â”‚   - Standalone Components           â”‚
-â”‚   - Auth0 Angular SDK               â”‚
-â”‚   - HTTP Interceptors (JWT)         â”‚
-â”‚   - Responsive UI                   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-               â”‚ HTTP + JWT
-               â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚   Express.js API (Port 3000)        â”‚
-â”‚   - Authentication (Auth0 JWT)      â”‚
-â”‚   - Business Logic                  â”‚
-â”‚   - Request Routing                 â”‚
-â”‚   - CORS for Frontend               â”‚
-â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
-       â”‚                      â”‚
-       â–¼                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚   MongoDB       â”‚    â”‚  AWS Lambda Services â”‚
-â”‚   - User Prefs  â”‚    â”‚  - Weather API       â”‚
-â”‚   - File Meta   â”‚    â”‚  - MotoGP Data       â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â”‚  - F1 Data           â”‚
-                       â”‚  - File Handler (S3) â”‚
-                       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
++---------------------------------------+
+|     Angular Frontend (SPA)            |
+|   - Standalone Components             |
+|   - Auth0 Angular SDK                 |
+|   - HTTP Interceptors (JWT)           |
+|   - Responsive UI                     |
++-------------------+-------------------+
+                    | HTTP + JWT
+                    v
++---------------------------------------+
+|   Express.js API (Port 3000)          |
+|   - Authentication (Auth0 JWT)        |
+|   - Business Logic                    |
+|   - Request Routing                   |
+|   - CORS for Frontend                 |
++--------+-----------------+------------+
+         |                 |
+         v                 v
++-----------------+    +----------------------+
+|   MongoDB       |    |  AWS Lambda Services |
+|   - User Prefs  |    |  - Weather API       |
+|   - File Meta   |    |  - MotoGP Data       |
++-----------------+    |  - F1 Data           |
+                       |  - File Handler (S3) |
+                       +----------------------+
 
 Deployment Architecture:
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”      â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚   Angular    â”‚      â”‚   Express    â”‚
-â”‚  (Served on  â”‚      â”‚  (AWS ELB)   â”‚
-â”‚   Port 4200) â”‚      â”‚  Port 3000   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜      â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
++--------------+      +--------------+
+|   Angular    |      |   Express    |
+|  (Served on  |      |  (AWS ELB)   |
+|   Port 4200) |      |  Port 3000   |
++--------------+      +--------------+
 ```
 
 ---
 
-## ðŸ“š Technology Stack
+## 📚 Technology Stack
 
 ### Frontend Framework
 - **Framework:** Angular 19.2.0 (latest)
@@ -75,6 +75,7 @@ Deployment Architecture:
 - **Forms:** Angular Reactive Forms
 - **HTTP Client:** Angular HttpClient with interceptors
 - **Auth:** @auth0/auth0-angular 2.3.0
+- **Error Tracking:** @sentry/angular 10.27.0
 
 ### Frontend Build Tools
 - **CLI:** Angular CLI 19.2.19
@@ -86,6 +87,7 @@ Deployment Architecture:
 - **Language:** TypeScript 5.3.3
 - **Framework:** Express.js 4.18.2
 - **API Style:** RESTful API with JWT authentication
+- **Error Tracking:** @sentry/node 10.27.0, @sentry/profiling-node 10.27.0
 
 ### Authentication & Security
 - **Auth Provider:** Auth0 (OAuth2 JWT Bearer)
@@ -143,49 +145,50 @@ Deployment Architecture:
 
 ---
 
-## ðŸ“ Project Structure
+## 📁 Project Structure
 
 ```
 lets-go-racing/
-â”œâ”€â”€ frontend/                   # Angular SPA Application
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ app/
-â”‚   â”‚   â”‚   â”œâ”€â”€ pages/
-â”‚   â”‚   â”‚   â”‚   â”œâ”€â”€ landing/            # Landing page component
-â”‚   â”‚   â”‚   â”‚   â”œâ”€â”€ callback/           # Auth0 callback handler
-â”‚   â”‚   â”‚   â”‚   â”œâ”€â”€ dashboard/          # Main dashboard (protected)
-â”‚   â”‚   â”‚   â”‚   â””â”€â”€ preferences/        # User preferences (protected)
-â”‚   â”‚   â”‚   â”œâ”€â”€ app.component.ts        # Root component
-â”‚   â”‚   â”‚   â”œâ”€â”€ app.routes.ts           # Route configuration
-â”‚   â”‚   â”‚   â”œâ”€â”€ app.config.ts           # Application providers
-â”‚   â”‚   â”‚   â””â”€â”€ auth.config.ts          # Auth0 configuration
-â”‚   â”‚   â”œâ”€â”€ environments/
-â”‚   â”‚   â”‚   â”œâ”€â”€ environment.ts          # Development config
-â”‚   â”‚   â”‚   â””â”€â”€ environment.prod.ts     # Production config
-â”‚   â”‚   â”œâ”€â”€ main.ts                     # Bootstrap file
-â”‚   â”‚   â””â”€â”€ index.html                  # HTML entry point
-â”‚   â”œâ”€â”€ public/                         # Static assets
-â”‚   â”œâ”€â”€ angular.json                    # Angular CLI configuration
-â”‚   â”œâ”€â”€ package.json                    # Frontend dependencies
-â”‚   â””â”€â”€ tsconfig.json                   # TypeScript configuration
-â”‚
-â”œâ”€â”€ backend/                    # Express.js API server
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ server.ts          # Main application entry point
-â”‚   â”‚   â”œâ”€â”€ database.ts        # MongoDB service layer
-â”‚   â”‚   â””â”€â”€ lambdaService.ts   # Lambda integration service
-â”‚   â”œâ”€â”€ package.json           # Backend dependencies
-â”‚   â”œâ”€â”€ tsconfig.json          # TypeScript configuration
-â”‚   â””â”€â”€ Dockerfile             # Docker build configuration
-â”‚
-â”œâ”€â”€ lambdas/                   # Serverless Lambda functions
-â”‚   â””â”€â”€ weather/               # Weather data Lambda
-â”‚       â”œâ”€â”€ index.ts           # Lambda handler
-â”‚       â”œâ”€â”€ package.json       # Lambda dependencies
-â”‚       â””â”€â”€ tsconfig.json      # Lambda TypeScript config
-â”‚
-â””â”€â”€ infra/                     # Infrastructure scripts
-    â””â”€â”€ packageLambda.sh       # Lambda packaging script
+|-- frontend/                   # Angular SPA Application
+|   |-- src/
+|   |   |-- app/
+|   |   |   |-- pages/
+|   |   |   |   |-- landing/            # Landing page component
+|   |   |   |   |-- callback/           # Auth0 callback handler
+|   |   |   |   |-- dashboard/          # Main dashboard (protected)
+|   |   |   |   `-- preferences/        # User preferences (protected)
+|   |   |   |-- app.component.ts        # Root component
+|   |   |   |-- app.routes.ts           # Route configuration
+|   |   |   |-- app.config.ts           # Application providers
+|   |   |   `-- auth.config.ts          # Auth0 configuration
+|   |   |-- environments/
+|   |   |   |-- environment.ts          # Development config
+|   |   |   `-- environment.prod.ts     # Production config
+|   |   |-- main.ts                     # Bootstrap file
+|   |   `-- index.html                  # HTML entry point
+|   |-- public/                         # Static assets
+|   |-- angular.json                    # Angular CLI configuration
+|   |-- package.json                    # Frontend dependencies
+|   `-- tsconfig.json                   # TypeScript configuration
+|
+|-- backend/                    # Express.js API server
+|   |-- src/
+|   |   |-- server.ts          # Main application entry point
+|   |   |-- instrument.ts      # Sentry initialization (must be imported first)
+|   |   |-- database.ts        # MongoDB service layer
+|   |   `-- lambdaService.ts   # Lambda integration service
+|   |-- package.json           # Backend dependencies
+|   |-- tsconfig.json          # TypeScript configuration
+|   `-- Dockerfile             # Docker build configuration
+|
+|-- lambdas/                   # Serverless Lambda functions
+|   `-- weather/               # Weather data Lambda
+|       |-- index.ts           # Lambda handler
+|       |-- package.json       # Lambda dependencies
+|       `-- tsconfig.json      # Lambda TypeScript config
+|
+`-- infra/                     # Infrastructure scripts
+    `-- packageLambda.sh       # Lambda packaging script
 ```
 
 ### Key Directories Explained
@@ -203,11 +206,11 @@ lets-go-racing/
 
 ---
 
-## ðŸ”Œ API Architecture
+## 📌 API Architecture
 
 ### Base URL
 - **Development:** `http://localhost:3000`
-- **Production:** TBD
+- **Production:** `https://api-home.thisisvillegas.com`
 
 ### Authentication
 All `/api/*` endpoints require Auth0 JWT authentication, except:
@@ -290,7 +293,7 @@ DELETE /api/files/:fileId
 
 ---
 
-## ðŸŽ¨ Frontend Architecture
+## 🎨 Frontend Architecture
 
 ### Angular Application Structure
 
@@ -338,7 +341,7 @@ DELETE /api/files/:fileId
   - `GET /api/weather` - Weather data
   - `GET /api/races/upcoming` - Race schedule
 - **Auth:** Protected by AuthGuard
-- **Styling:** Inline template with purple gradient theme
+- **Styling:** External template and SCSS stylesheet with purple gradient theme
 
 #### PreferencesComponent
 - **Purpose:** User settings management
@@ -367,12 +370,12 @@ DELETE /api/files/:fileId
 - Automatically attaches JWT token to all API requests
 - Configured for specific endpoints:
   - `http://localhost:3000/api/*` (development)
-  - `http://racing-dashboard-alb-*.elb.amazonaws.com/api/*` (production)
+  - `https://api-home.thisisvillegas.com/api/*` (production)
 - Token includes Auth0 audience claim
 
 **API Base URLs (Environment-based):**
 - **Development:** `http://localhost:3000/api`
-- **Production:** `http://racing-dashboard-alb-332277837.us-east-1.elb.amazonaws.com/api`
+- **Production:** `https://api-home.thisisvillegas.com/api`
 
 ### Authentication Flow (Frontend)
 
@@ -476,7 +479,7 @@ DELETE /api/files/:fileId
 
 ---
 
-## ðŸ’¾ Data Models & Schema
+## 💾 Data Models & Schema
 
 ### UserPreferences (MongoDB Collection: 'preferences')
 
@@ -529,7 +532,7 @@ interface RaceData {
 
 ---
 
-## ðŸ” Security Implementation
+## 🔐 Security Implementation
 
 ### Authentication Flow
 
@@ -568,7 +571,81 @@ Each Lambda function validates:
 
 ---
 
-## ðŸ”„ Service Integration Architecture
+## 📊 Monitoring & Error Tracking
+
+### Sentry Integration
+
+The application uses **Sentry** for error tracking and performance monitoring on both frontend and backend.
+
+#### Backend Sentry Setup
+
+**File:** `backend/src/instrument.ts` (must be imported before other modules)
+
+```typescript
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
+Sentry.init({
+    dsn: '<your-sentry-dsn>',
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    integrations: [nodeProfilingIntegration()],
+    release: 'racing-dashboard-backend@1.0.0',
+});
+```
+
+**Features:**
+- Automatic error capture and reporting
+- Performance tracing with configurable sample rates
+- Node.js profiling integration
+- Environment-aware configuration (dev vs prod)
+- Express error handler middleware (`Sentry.setupExpressErrorHandler(app)`)
+
+#### Frontend Sentry Setup
+
+**File:** `frontend/src/app/app.config.ts`
+
+```typescript
+import * as Sentry from '@sentry/angular';
+
+// In providers array:
+{
+    provide: ErrorHandler,
+    useValue: Sentry.createErrorHandler({ showDialog: false }),
+},
+{
+    provide: Sentry.TraceService,
+    deps: [Router],
+},
+```
+
+**Features:**
+- Angular ErrorHandler integration
+- Route change tracking via TraceService
+- User context tracking (set in DashboardComponent)
+- Test error endpoint for verification
+
+#### User Context Tracking
+
+The DashboardComponent sets user context in Sentry after authentication:
+
+```typescript
+Sentry.setUser({
+    id: user.sub,
+    email: user.email,
+    username: user.name,
+});
+```
+
+#### Test Endpoints
+
+- **Backend:** `GET /api/test-error` - Throws a test error for Sentry verification
+- **Frontend:** `testSentryError()` method in DashboardComponent
+
+---
+
+## 🔄 Service Integration Architecture
 
 ### Lambda Service Pattern
 
@@ -609,7 +686,7 @@ class DatabaseService {
 
 ---
 
-## ðŸ§ª Testing Strategy
+## 🧪 Testing Strategy
 
 ### Testing Frameworks
 - **Unit Tests:** Jest 29.7.0
@@ -628,7 +705,7 @@ npm run lint          # Run ESLint
 
 ---
 
-## ðŸš€ Deployment Architecture
+## 🚀 Deployment Architecture
 
 ### Environment Configuration
 
@@ -648,7 +725,7 @@ ng build                # Build with optimizations
 # Minification, tree-shaking, AOT compilation
 ```
 Environment: Production
-API URL: `http://racing-dashboard-alb-332277837.us-east-1.elb.amazonaws.com/api`
+API URL: `https://api-home.thisisvillegas.com/api`
 
 #### Backend Development
 ```bash
@@ -699,8 +776,8 @@ Environment variables: Container environment
 ### Production Infrastructure
 
 **Current Setup:**
-- Backend: AWS ELB (Elastic Load Balancer)
-  - URL: `http://racing-dashboard-alb-332277837.us-east-1.elb.amazonaws.com`
+- Backend: AWS ELB (Elastic Load Balancer) with custom domain
+  - URL: `https://api-home.thisisvillegas.com`
 - Lambda Functions: AWS Lambda + API Gateway
 - Database: MongoDB Atlas (assumed)
 - Frontend: Not yet deployed (development only)
@@ -719,7 +796,7 @@ export const environment = {
 ```typescript
 export const environment = {
     production: true,
-    apiUrl: 'http://racing-dashboard-alb-332277837.us-east-1.elb.amazonaws.com/api'
+    apiUrl: 'https://api-home.thisisvillegas.com/api'
 };
 ```
 
@@ -727,15 +804,29 @@ export const environment = {
 ```typescript
 export const authConfig = {
     domain: 'dev-6sfjxompkc4vz884.us.auth0.com',
-    clientId: 'hbh4yFBax7RFG5jyeQBdiFAJucSSwJMH',
+    clientId: '3cUknJuXEju8xlwS9RIP4t1SAxrdJfw4',
     authorizationParams: {
         redirect_uri: window.location.origin + '/callback',
-        audience: 'https://api.racing-dashboard.com',
+        audience: 'https://api-home.thisisvillegas.com',
     },
     httpInterceptor: {
         allowedList: [
-            'http://localhost:3000/api/*',
-            'http://racing-dashboard-alb-*.elb.amazonaws.com/api/*'
+            {
+                uri: 'http://localhost:3000/api/*',
+                tokenOptions: {
+                    authorizationParams: {
+                        audience: 'https://api-home.thisisvillegas.com',
+                    }
+                }
+            },
+            {
+                uri: 'https://api-home.thisisvillegas.com/api/*',
+                tokenOptions: {
+                    authorizationParams: {
+                        audience: 'https://api-home.thisisvillegas.com',
+                    }
+                }
+            }
         ]
     }
 };
@@ -748,8 +839,11 @@ PORT=3000
 NODE_ENV=production
 
 # Auth0
-AUTH0_AUDIENCE=https://api.racing-dashboard.com
+AUTH0_AUDIENCE=https://api-home.thisisvillegas.com
 AUTH0_ISSUER_BASE_URL=https://dev-6sfjxompkc4vz884.us.auth0.com
+
+# Sentry
+SENTRY_DSN=<your-sentry-dsn>
 
 # MongoDB
 MONGODB_URI=mongodb+srv://<connection-string>
@@ -773,9 +867,9 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸ“¦ Dependencies
+## 📦 Dependencies
 
-### Frontend Production Dependencies
+### 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -787,11 +881,12 @@ WEATHER_API_KEY=<weatherapi-key>
 | @angular/platform-browser-dynamic | ^19.2.0 | Dynamic bootstrapping |
 | @angular/router | ^19.2.0 | Routing and navigation |
 | @auth0/auth0-angular | ^2.3.0 | Auth0 authentication |
+| @sentry/angular | ^10.27.0 | Error tracking and monitoring |
 | rxjs | ~7.8.0 | Reactive programming |
 | tslib | ^2.3.0 | TypeScript runtime library |
 | zone.js | ~0.15.0 | Angular zone.js |
 
-### Frontend Development Dependencies
+### 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -807,11 +902,13 @@ WEATHER_API_KEY=<weatherapi-key>
 | karma-jasmine | ~5.1.0 | Jasmine adapter |
 | karma-jasmine-html-reporter | ~2.1.0 | HTML test reporter |
 
-### Backend Production Dependencies
+### 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
 | express | ^4.18.2 | Web framework |
+| @sentry/node | ^10.27.0 | Error tracking and monitoring |
+| @sentry/profiling-node | ^10.27.0 | Performance profiling |
 | cors | ^2.8.5 | CORS middleware |
 | dotenv | ^16.3.1 | Environment variable management |
 | express-oauth2-jwt-bearer | ^1.6.0 | Auth0 JWT authentication |
@@ -819,7 +916,7 @@ WEATHER_API_KEY=<weatherapi-key>
 | axios | ^1.6.2 | HTTP client for Lambda calls |
 | aws-sdk | ^2.1498.0 | AWS service integration |
 
-### Backend Development Dependencies
+### 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -836,7 +933,7 @@ WEATHER_API_KEY=<weatherapi-key>
 | @types/jest | ^29.5.11 | TypeScript types |
 | ts-jest | ^29.1.1 | Jest TypeScript support |
 
-### Lambda Production Dependencies
+### 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -844,7 +941,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸŽ¯ Design Patterns & Principles
+## 🎯 Design Patterns & Principles
 
 ### Patterns Implemented
 
@@ -881,7 +978,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸ”„ Key Workflows & Business Logic
+## 🔄 Key Workflows & Business Logic
 
 ### User Authentication Flow
 
@@ -935,7 +1032,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸŒ Integration Points
+## 🌐 Integration Points
 
 ### External APIs
 
@@ -959,7 +1056,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸ“Š Performance Considerations
+## 📊 Performance Considerations
 
 ### Optimization Strategies
 
@@ -990,28 +1087,45 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸ› Known Issues & Technical Debt
+## 🐛 Known Issues & Technical Debt
 
 ### Current Issues
 
 1. **Mock Data:** Race endpoints return mock data instead of real Lambda calls
 2. **File Upload:** File upload endpoints not yet implemented
 3. **Error Messages:** Some generic error messages need improvement
-4. **Typo:** Line 19 in server.ts - "COnnect" should be "Connect"
+4. **Typo:** Line 21 in server.ts - "COnnect" should be "Connect"
 
 ### Technical Debt
 
 1. **Testing:** No tests implemented yet
 2. **Validation:** No request body validation (consider using Joi or Zod)
 3. **Logging:** Basic console.log, needs structured logging (Winston/Pino)
-4. **Monitoring:** No APM or error tracking (consider Sentry, Datadog)
-5. **API Documentation:** No OpenAPI/Swagger documentation
-6. **Database Migrations:** No migration strategy for schema changes
-7. **Secrets Management:** API keys in environment variables (consider AWS Secrets Manager)
+4. **API Documentation:** No OpenAPI/Swagger documentation
+5. **Database Migrations:** No migration strategy for schema changes
+6. **Secrets Management:** API keys in environment variables (consider AWS Secrets Manager)
 
 ---
 
-## ðŸ“ˆ Recent Changes & Decisions Log
+## 📈 Recent Changes & Decisions Log
+
+### 2025-12-07 - Version 2.1 - Documentation Update & Sentry Integration
+
+#### What Changed:
+- **Sentry Integration Documented:** Added comprehensive documentation for Sentry error tracking on both frontend and backend
+- **Production URL Updated:** Changed from AWS ELB URL to custom domain `https://api-home.thisisvillegas.com`
+- **Auth0 Configuration Updated:** Corrected clientId and audience values to match actual implementation
+- **Project Structure Updated:** Added `instrument.ts` to backend source files
+- **Dashboard Component:** Corrected description to note external templates/SCSS (not inline)
+- **Dependencies Updated:** Added Sentry packages to dependency tables
+
+#### Key Additions:
+- New "Monitoring & Error Tracking" section
+- Sentry setup examples for frontend and backend
+- User context tracking documentation
+- Test error endpoints documentation
+
+---
 
 ### 2024-11-30 - Version 2.0 - Frontend Added
 
@@ -1061,9 +1175,9 @@ WEATHER_API_KEY=<weatherapi-key>
 6. **AWS ELB for Backend**
    - **Rationale:** Scalable, managed load balancing
    - **Benefit:** No server management, auto-scaling
-   - **Current URL:** `racing-dashboard-alb-332277837.us-east-1.elb.amazonaws.com`
+   - **Current URL:** `https://api-home.thisisvillegas.com` (custom domain)
 
-#### Frontend Architecture Highlights
+#### 🎨 Frontend Architecture Highlights
 
 - **Pattern:** Single Page Application (SPA)
 - **Routing:** Lazy-loaded routes with AuthGuard protection
@@ -1072,7 +1186,7 @@ WEATHER_API_KEY=<weatherapi-key>
 - **Styling:** Purple gradient theme, card-based layout
 - **Responsive:** Mobile-first design approach
 
-#### Integration Points
+#### 🌐 Integration Points
 
 - Frontend â†’ Backend: HTTP calls with JWT tokens
 - Auth0: Complete authentication flow implemented
@@ -1115,7 +1229,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸŽ“ Development Guidelines
+## 🎓 Development Guidelines
 
 ### Adding New API Endpoints
 
@@ -1145,7 +1259,7 @@ WEATHER_API_KEY=<weatherapi-key>
 
 ---
 
-## ðŸ“ Notes & Additional Context
+## 📝 Notes & Additional Context
 
 ### Project Context
 
@@ -1195,6 +1309,7 @@ To update: Provide changes to Claude and say "Update the architecture documentat
 
 ---
 
-**Created:** 2024-11-30  
-**Author:** Automated analysis + manual enhancement  
+**Created:** 2024-11-30
+**Last Updated:** 2025-12-07
+**Author:** Automated analysis + manual enhancement
 **Project:** Let's Go Racing

@@ -1,69 +1,136 @@
 <div class="dashboard-container">
     <nav class="navbar">
-        <h1>Home Platform</h1>
+        <div class="nav-brand">
+            <span class="logo-icon">&#9670;</span>
+            <span class="logo-text">Your Dashboard</span>
+        </div>
         <div class="nav-actions">
-            <button class="btn-primary" (click)="testSentryError()">Test Sentry Error</button>
             <a routerLink="/preferences" class="nav-link">Preferences</a>
             <button class="btn-logout" (click)="logout()">Logout</button>
         </div>
     </nav>
 
     <main class="content">
-        <section class="weather-section">
-            <h2>Current Weather</h2>
-            <div class="card" *ngIf="weather; else loadingWeather">
-                <div class="weather-info">
-                    <div class="temp">{{ weather.temperature }}°F</div>
-                    <div class="location">{{ weather.location }}</div>
-                    <div class="condition">{{ weather.condition }}</div>
-                </div>
-                <div class="weather-details">
-                    <div>💧 Humidity: {{ weather.humidity }}%</div>
-                    <div>💨 Wind: {{ weather.windSpeed }} mph</div>
-                </div>
+        <header class="dashboard-header">
+            <div class="greeting-section">
+                <p class="greeting">{{ greeting }}</p>
+                <h1>{{ userName || 'Welcome back' }}</h1>
             </div>
-            <ng-template #loadingWeather>
-                <div class="card loading">Loading weather data...</div>
-            </ng-template>
-            <div class="card error" *ngIf="weatherError">
-                {{ weatherError }}
+            <div class="time-display">
+                <span class="current-time">{{ currentTime }}</span>
+                <span class="current-date">{{ currentDate }}</span>
             </div>
-        </section>
+        </header>
 
-        <section class="races-section">
-            <h2>Upcoming Races (Next 2 Weeks)</h2>
-
-            <div class="race-category">
-                <h3>🏍️ MotoGP</h3>
-                <div *ngIf="races && races.motogp && races.motogp.length > 0; else noMotogp">
-                    <div class="card race-card" *ngFor="let race of races.motogp">
-                        <div class="race-name">{{ race.name }}</div>
-                        <div class="race-details">
-                            📍 {{ race.location }}, {{ race.country }}
+        <div class="widgets-grid">
+            <section class="widget weather-widget">
+                <div class="widget-header">
+                    <span class="widget-icon">&#9788;</span>
+                    <h2>Weather</h2>
+                </div>
+                <div class="widget-content" *ngIf="weather; else loadingWeather">
+                    <div class="weather-main">
+                        <span class="temp">{{ weather.temperature }}{{ getTempUnit() }}</span>
+                        <div class="weather-info">
+                            <span class="condition">{{ weather.condition }}</span>
+                            <span class="location">{{ weather.location }}</span>
                         </div>
-                        <div class="race-date">📅 {{ race.date }}</div>
+                    </div>
+                    <div class="weather-details">
+                        <div class="detail">
+                            <span class="detail-label">Feels Like</span>
+                            <span class="detail-value">{{ weather.feelsLike }}{{ getTempUnit() }}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Humidity</span>
+                            <span class="detail-value">{{ weather.humidity }}%</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Wind</span>
+                            <span class="detail-value">{{ weather.windSpeed }} {{ getSpeedUnit() }}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Gust</span>
+                            <span class="detail-value">{{ weather.gust }} {{ getSpeedUnit() }}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Pressure</span>
+                            <span class="detail-value">{{ weather.pressure }} {{ getPressureUnit() }}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Heat Index</span>
+                            <span class="detail-value">{{ weather.heatIndex }}{{ getTempUnit() }}</span>
+                        </div>
+                        <div class="detail">
+                            <span class="detail-label">Dewpoint</span>
+                            <span class="detail-value">{{ weather.dewpoint }}{{ getTempUnit() }}</span>
+                        </div>
                     </div>
                 </div>
-                <ng-template #noMotogp>
-                    <div class="card">No MotoGP races scheduled</div>
+                <ng-template #loadingWeather>
+                    <div class="widget-loading">Loading weather...</div>
                 </ng-template>
-            </div>
+                <div class="widget-error" *ngIf="weatherError">
+                    {{ weatherError }}
+                </div>
+            </section>
 
-            <div class="race-category">
-                <h3>🏎️ Formula 1</h3>
-                <div *ngIf="races && races.f1 && races.f1.length > 0; else noF1">
-                    <div class="card race-card" *ngFor="let race of races.f1">
-                        <div class="race-name">{{ race.name }}</div>
-                        <div class="race-details">
-                            📍 {{ race.location }}, {{ race.country }}
+            <section class="widget events-widget">
+                <div class="widget-header">
+                    <span class="widget-icon">&#9733;</span>
+                    <h2>Upcoming Events</h2>
+                </div>
+                <div class="widget-content">
+                    <div class="race-category">
+                        <h3>MotoGP</h3>
+                        <div *ngIf="races && races.motogp && races.motogp.length > 0; else noMotogp">
+                            <div class="event-item" *ngFor="let race of races.motogp">
+                                <div class="event-name">{{ race.name }}</div>
+                                <div class="event-meta">
+                                    <span>{{ race.location }}, {{ race.country }}</span>
+                                    <span class="event-date">{{ race.date }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="race-date">📅 {{ race.date }}</div>
+                        <ng-template #noMotogp>
+                            <p class="no-events">No races scheduled</p>
+                        </ng-template>
+                    </div>
+
+                    <div class="race-category">
+                        <h3>Formula 1</h3>
+                        <div *ngIf="races && races.f1 && races.f1.length > 0; else noF1">
+                            <div class="event-item" *ngFor="let race of races.f1">
+                                <div class="event-name">{{ race.name }}</div>
+                                <div class="event-meta">
+                                    <span>{{ race.location }}, {{ race.country }}</span>
+                                    <span class="event-date">{{ race.date }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <ng-template #noF1>
+                            <p class="no-events">No races scheduled</p>
+                        </ng-template>
                     </div>
                 </div>
-                <ng-template #noF1>
-                    <div class="card">No F1 races scheduled</div>
-                </ng-template>
-            </div>
-        </section>
+            </section>
+
+            <section class="widget quick-actions-widget">
+                <div class="widget-header">
+                    <span class="widget-icon">&#9889;</span>
+                    <h2>Quick Actions</h2>
+                </div>
+                <div class="widget-content">
+                    <a routerLink="/preferences" class="action-btn">
+                        <span class="action-icon">&#9881;</span>
+                        <span>Preferences</span>
+                    </a>
+                    <button class="action-btn" (click)="loadWeather()">
+                        <span class="action-icon">&#8635;</span>
+                        <span>Refresh Weather</span>
+                    </button>
+                </div>
+            </section>
+        </div>
     </main>
 </div>

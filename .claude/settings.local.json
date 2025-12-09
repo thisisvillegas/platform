@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"(Get-Content ''''c:\\Users\\Dres\\Dev\\platform\\LGR-architecture.md'''' -Raw -Encoding UTF8) -replace ''''â\"œâ\"€â\"€',')"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

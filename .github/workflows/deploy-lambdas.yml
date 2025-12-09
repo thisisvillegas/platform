@@ -1,0 +1,128 @@
+name: Deploy Lambdas
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'lambdas/**'
+      - '.github/workflows/deploy-lambdas.yml'
+  workflow_dispatch:
+    inputs:
+      lambda_name:
+        description: 'Lambda to deploy (leave empty to auto-detect)'
+        required: false
+        type: choice
+        options:
+          - weather
+          - motogp
+          - f1
+          - file-handler
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  detect-changes:
+    name: Detect Changed Lambdas
+    runs-on: ubuntu-latest
+    outputs:
+      lambdas: ${{ steps.detect.outputs.lambdas }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed lambdas
+        id: detect
+        run: |
+          if [ -n "${{ github.event.inputs.lambda_name }}" ]; then
+            # Manual trigger with specific lambda
+            echo "lambdas=[\"${{ github.event.inputs.lambda_name }}\"]" >> $GITHUB_OUTPUT
+          else
+            # Auto-detect changed lambdas
+            CHANGED_LAMBDAS=$(git diff --name-only HEAD~1 HEAD | grep '^lambdas/' | cut -d'/' -f2 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "Changed lambdas: $CHANGED_LAMBDAS"
+            echo "lambdas=$CHANGED_LAMBDAS" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    name: Deploy ${{ matrix.lambda }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.lambdas != '[]' && needs.detect-changes.outputs.lambdas != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lambda: ${{ fromJson(needs.detect-changes.outputs.lambdas) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check if Lambda directory exists
+        id: check-dir
+        run: |
+          if [ -d "lambdas/${{ matrix.lambda }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Lambda directory lambdas/${{ matrix.lambda }} does not exist"
+          fi
+
+      - name: Install dependencies
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: npm ci
+
+      - name: Build TypeScript
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: npm run build
+
+      - name: Package Lambda
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: |
+          cd dist
+          cp ../package.json .
+          cp ../package-lock.json . 2>/dev/null || true
+          npm ci --production --ignore-scripts
+          zip -r ../${{ matrix.lambda }}-lambda.zip .
+
+      - name: Deploy to Lambda
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: |
+          # Lambda function name convention: {name}-lambda
+          FUNCTION_NAME="${{ matrix.lambda }}-lambda"
+          
+          aws lambda update-function-code \
+            --function-name $FUNCTION_NAME \
+            --zip-file fileb://${{ matrix.lambda }}-lambda.zip \
+            --publish
+          
+          echo "✅ Deployed $FUNCTION_NAME successfully!"
+
+      - name: Print deployment info
+        if: steps.check-dir.outputs.exists == 'true'
+        run: |
+          FUNCTION_NAME="${{ matrix.lambda }}-lambda"
+          aws lambda get-function \
+            --function-name $FUNCTION_NAME \
+            --query 'Configuration.{FunctionName:FunctionName,Version:Version,LastModified:LastModified,Runtime:Runtime}' \
+            --output table

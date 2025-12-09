@@ -4,6 +4,7 @@ interface WeatherParams {
     lat?: string;
     lon?: string;
     city?: string;
+    units?: 'metric' | 'imperial';
 }
 
 interface RaceData {
@@ -37,6 +38,9 @@ class LambdaService {
             } else if (params.city) {
                 queryParams.append('city', params.city);
             }
+            if (params.units) {
+                queryParams.append('units', params.units);
+            }
 
             const url = `${weatherUrl}?${queryParams.toString()}`;
 
@@ -48,6 +52,8 @@ class LambdaService {
                 },
                 timeout: 10000, // 10 second timeout
             });
+
+            console.log('Weather Lambda response:', response.data);
 
             return response.data;
         } catch (error: any) {

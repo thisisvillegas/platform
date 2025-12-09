@@ -4,11 +4,16 @@ interface WeatherResponse {
     location: string;
     temperature: number;
     feelsLike: number;
+    heatIndex: number;
+    dewpoint: number;
     condition: string;
     description: string;
     humidity: number;
     windSpeed: number;
+    gust: number;
+    pressure: number;
     icon: string;
+    units: 'metric' | 'imperial';
 }
 
 interface LambdaEvent {
@@ -16,6 +21,7 @@ interface LambdaEvent {
         lat?: string;
         lon?: string;
         city?: string;
+        units?: 'metric' | 'imperial';
     };
     headers?: {
         'x-api-key'?: string;
@@ -39,8 +45,9 @@ export const handler = async (event: LambdaEvent): Promise<LambdaResponse> => {
     console.log('Weather Lambda triggered:', JSON.stringify(event, null, 2));
 
     try {
-        // Validate API key
-        const apiKey = event.headers?.['x-api-key'];
+        // Validate API key - check both lowercase and original case (API Gateway normalizes to lowercase)
+        const headers = event.headers || {};
+        const apiKey = headers['x-api-key'] || headers['X-Api-Key'];
         const expectedApiKey = process.env.API_KEY;
 
         if (!apiKey || apiKey !== expectedApiKey) {
@@ -54,8 +61,9 @@ export const handler = async (event: LambdaEvent): Promise<LambdaResponse> => {
             };
         }
 
-        // Get location parameters
-        const { lat, lon, city } = event.queryStringParameters || {};
+        // Get location and units parameters
+        const { lat, lon, city, units = 'imperial' } = event.queryStringParameters || {};
+        const isMetric = units === 'metric';
 
         if (!lat && !lon && !city) {
             return {
@@ -85,16 +93,21 @@ export const handler = async (event: LambdaEvent): Promise<LambdaResponse> => {
         const response = await axios.get(weatherUrl);
         const data = response.data;
 
-        // Transform the response to our format
+        // Transform the response to our format based on units preference
         const weatherData: WeatherResponse = {
             location: `${data.location.name}, ${data.location.country}`,
-            temperature: Math.round(data.current.temp_c),
-            feelsLike: Math.round(data.current.feelslike_c),
+            temperature: Math.round(isMetric ? data.current.temp_c : data.current.temp_f),
+            feelsLike: Math.round(isMetric ? data.current.feelslike_c : data.current.feelslike_f),
+            heatIndex: Math.round(isMetric ? data.current.heatindex_c : data.current.heatindex_f),
+            dewpoint: Math.round(isMetric ? data.current.dewpoint_c : data.current.dewpoint_f),
             condition: data.current.condition.text,
             description: data.current.condition.text,
             humidity: data.current.humidity,
-            windSpeed: Math.round(data.current.wind_kph),
+            windSpeed: Math.round(isMetric ? data.current.wind_kph : data.current.wind_mph),
+            gust: Math.round(isMetric ? data.current.gust_kph : data.current.gust_mph),
+            pressure: isMetric ? data.current.pressure_mb : data.current.pressure_in,
             icon: data.current.condition.icon,
+            units: units,
         };
 
         console.log('Weather data fetched successfully:', weatherData);

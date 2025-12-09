@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Let's Go Racing - Local Lambda Development
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs20.x
+    MemorySize: 256
+
+Resources:
+  WeatherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: weather-lambda
+      CodeUri: dist/
+      Handler: index.handler
+      Environment:
+        Variables:
+          WEATHER_API_KEY: !Ref WeatherApiKey
+          API_KEY: !Ref ApiKey
+      Events:
+        WeatherApi:
+          Type: Api
+          Properties:
+            Path: /weather
+            Method: get
+
+Parameters:
+  WeatherApiKey:
+    Type: String
+    Default: ''
+    Description: WeatherAPI.com API key
+  ApiKey:
+    Type: String
+    Default: ''
+    Description: Internal API key for authentication
+
+Outputs:
+  WeatherApi:
+    Description: API Gateway endpoint URL for Weather function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/weather/"
+  WeatherFunction:
+    Description: Weather Lambda Function ARN
+    Value: !GetAtt WeatherFunction.Arn

@@ -80,10 +80,15 @@ app.get('/api/races/upcoming', async (req: Request, res: Response) => {
 // Get weather for user's location
 app.get('/api/weather', async (req: Request, res: Response) => {
     try {
-        // Get location from query params or use default
-        const { lat, lon, city } = req.query;
+        // Get location and units from query params
+        const { lat, lon, city, units } = req.query;
 
-        const weatherData = await lambdaService.getWeather({ lat: lat as string, lon: lon as string, city: city as string });
+        const weatherData = await lambdaService.getWeather({
+            lat: lat as string,
+            lon: lon as string,
+            city: city as string,
+            units: (units as 'metric' | 'imperial') || 'imperial'
+        });
 
         res.json(weatherData);
     } catch (error) {
@@ -113,7 +118,8 @@ app.get('/api/preferences', async (req: Request, res: Response) => {
             return res.json({
                 favoriteTeams: [],
                 notifications: true,
-                theme: 'dark'
+                theme: 'dark',
+                measurementUnits: 'imperial'
             });
         }
 
@@ -133,12 +139,13 @@ app.put('/api/preferences', async (req: Request, res: Response) => {
             return res.status(401).json({ error: 'User ID not found in token' });
         }
 
-        const { favoriteTeams, notifications, theme } = req.body;
+        const { favoriteTeams, notifications, theme, measurementUnits } = req.body;
 
         const preferences = await databaseService.updateUserPreferences(userId, {
             favoriteTeams,
             notifications,
             theme,
+            measurementUnits,
         });
 
         res.json({ message: 'Preferences updated successfully', preferences });

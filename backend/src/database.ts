@@ -5,6 +5,7 @@ interface UserPreferences {
     favoriteTeams?: string[];
     notifications?: boolean;
     theme?: string;
+    measurementUnits?: 'metric' | 'imperial';
     createdAt: Date;
     updatedAt: Date;
 }

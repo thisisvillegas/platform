@@ -1,31 +1,81 @@
 <div class="landing-container">
     <header class="header">
-        <h1>Racing Schedule Dashboard</h1>
+        <div class="logo">
+            <span class="logo-icon">&#9670;</span>
+            <span class="logo-text">Your Dashboard</span>
+        </div>
         <div class="auth-buttons">
-            <button class="btn btn-primary" (click)="login()">Log In</button>
-            <button class="btn btn-secondary" (click)="signup()">Sign Up</button>
+            <button class="btn btn-secondary" (click)="login()">Log In</button>
+            <button class="btn btn-primary" (click)="signup()">Get Started</button>
         </div>
     </header>
 
     <main class="content">
         <section class="hero">
-            <h2>Never Miss a Race - Now Fully Deployed!</h2>
-            <p>Track upcoming MotoGP and F1 races with real-time weather data</p>
+            <p class="greeting">{{ greeting }}</p>
+            <h1>Your personalized corner of the internet</h1>
+            <p class="subtitle">Everything you care about, all in one place. Weather, news, schedules, and more — tailored just for you.</p>
+            <div class="hero-cta">
+                <button class="btn btn-cta" (click)="signup()">Create Your Dashboard</button>
+            </div>
+        </section>
+
+        <section class="preview-grid">
+            <div class="preview-card weather-card">
+                <div class="card-header">
+                    <span class="card-icon">&#9788;</span>
+                    <span class="card-title">Weather</span>
+                </div>
+                <div class="card-preview">
+                    <span class="temp">72°</span>
+                    <span class="condition">Sunny</span>
+                </div>
+            </div>
+
+            <div class="preview-card time-card">
+                <div class="card-header">
+                    <span class="card-icon">&#9201;</span>
+                    <span class="card-title">{{ currentTime }}</span>
+                </div>
+                <div class="card-preview">
+                    <span class="date">{{ currentDate }}</span>
+                </div>
+            </div>
+
+            <div class="preview-card events-card">
+                <div class="card-header">
+                    <span class="card-icon">&#9733;</span>
+                    <span class="card-title">Events</span>
+                </div>
+                <div class="card-preview">
+                    <span class="event-count">3 upcoming</span>
+                </div>
+            </div>
         </section>
 
         <section class="features">
-            <div class="feature">
-                <h3>📅 Race Calendar</h3>
-                <p>View all upcoming races for the next two weeks</p>
-            </div>
-            <div class="feature">
-                <h3>🌤️ Weather Tracking</h3>
-                <p>Get current weather conditions at your location</p>
-            </div>
-            <div class="feature">
-                <h3>⚙️ Personalized</h3>
-                <p>Save your favorite teams and preferences</p>
+            <h2>Make it yours</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <div class="feature-icon">&#9881;</div>
+                    <h3>Fully Customizable</h3>
+                    <p>Add, remove, and arrange widgets to create your perfect dashboard</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#9889;</div>
+                    <h3>Real-time Updates</h3>
+                    <p>Stay current with live data from weather, events, and your favorite feeds</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128274;</div>
+                    <h3>Private & Secure</h3>
+                    <p>Your data stays yours. We never sell your information.</p>
+                </div>
             </div>
         </section>
     </main>
+
+    <footer class="footer">
+        <p>Start your day informed. End it accomplished.</p>
+    </footer>
 </div>
