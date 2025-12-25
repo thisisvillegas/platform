@@ -41,7 +41,7 @@ app.get('/api/test-error', (req: Request, res: Response) => {
     throw new Error('This is a test error for Sentry!');
 });
 
-// ============================================
+// ============================================++
 // RACE ENDPOINTS
 // ============================================
 
