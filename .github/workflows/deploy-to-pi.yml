@@ -1,0 +1,82 @@
+name: Deploy to Pi Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: self-hosted
+    if: contains(github.event.head_commit.modified, 'backend/') || contains(github.event.head_commit.added, 'backend/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Pull latest code
+        working-directory: /home/remus/apps/platform
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Install backend dependencies
+        working-directory: /home/remus/apps/platform/backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: /home/remus/apps/platform/backend
+        run: npm run build
+
+      - name: Restart backend
+        run: pm2 restart platform-api
+
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: self-hosted
+    if: contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Pull latest code
+        working-directory: /home/remus/apps/platform
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Install frontend dependencies
+        working-directory: /home/remus/apps/platform/frontend
+        run: npm ci
+
+      - name: Restart frontend
+        run: pm2 restart platform-frontend
+
+  deploy-all:
+    name: Deploy All (Manual)
+    runs-on: self-hosted
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Pull latest code
+        working-directory: /home/remus/apps/platform
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Install backend dependencies
+        working-directory: /home/remus/apps/platform/backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: /home/remus/apps/platform/backend
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: /home/remus/apps/platform/frontend
+        run: npm ci
+
+      - name: Restart all services
+        run: |
+          pm2 restart platform-api
+          pm2 restart platform-frontend
+
+      - name: Save PM2 state
+        run: pm2 save

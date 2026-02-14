@@ -1,188 +1,138 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
-<!-- * * * * * * * to get started with your project! * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- Server Stats Overlay -->
+<div class="server-overlay" *ngIf="showServerOverlay" (click)="closeOverlay($event)">
+  <div class="overlay-content" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="overlay-header">
+      <div class="header-left">
+        <span class="hex-icon">⬡</span>
+        <span class="title">SYSTEM MONITOR</span>
+        <span class="hostname">{{ stats?.system?.hostname }}</span>
+      </div>
+      <div class="header-right">
+        <span class="pulse-dot" [class.paused]="isPaused"></span>
+        <span class="timestamp">{{ lastUpdate }}</span>
+        <button class="ctrl-btn" (click)="togglePause()">{{ isPaused ? "▶" : "❚❚" }}</button>
+        <button class="close-btn" (click)="showServerOverlay = false">✕</button>
+      </div>
+    </div>
 
-<style>
-    :host {
-        --bright-blue: oklch(51.01% 0.274 263.83);
-        --electric-violet: oklch(53.18% 0.28 296.97);
-        --french-violet: oklch(47.66% 0.246 305.88);
-        --vivid-pink: oklch(69.02% 0.277 332.77);
-        --hot-red: oklch(61.42% 0.238 15.34);
-        --orange-red: oklch(63.32% 0.24 31.68);
+    <!-- Stats Content -->
+    <div class="overlay-body" *ngIf="stats">
+      
+      <!-- Top Row: Graphs -->
+      <div class="graphs-row">
+        <div class="graph-card">
+          <div class="graph-label">CPU LOAD</div>
+          <div class="graph-value" [class]="getStatus(stats.system.loadAverage[0], 2, 4)">{{ stats.system.loadAverage[0].toFixed(2) }}</div>
+          <svg class="mini-graph" viewBox="0 0 200 40" preserveAspectRatio="none">
+            <defs><linearGradient id="cpuG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00d4ff" stop-opacity="0.5"/><stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/></linearGradient></defs>
+            <path [attr.d]="getGraphFill('cpu')" fill="url(#cpuG)"/>
+            <path [attr.d]="getGraphPath('cpu')" class="graph-line cpu"/>
+          </svg>
+          <div class="graph-sub">{{ stats.system.cpuFreq }}MHz · {{ stats.system.processCount }} procs</div>
+        </div>
+        <div class="graph-card">
+          <div class="graph-label">MEMORY</div>
+          <div class="graph-value" [class]="getStatus(stats.memory.usedPercent, 60, 85)">{{ stats.memory.usedPercent }}%</div>
+          <svg class="mini-graph" viewBox="0 0 200 40" preserveAspectRatio="none">
+            <defs><linearGradient id="memG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#00ffc8" stop-opacity="0.5"/><stop offset="100%" stop-color="#00ffc8" stop-opacity="0"/></linearGradient></defs>
+            <path [attr.d]="getGraphFill('mem')" fill="url(#memG)"/>
+            <path [attr.d]="getGraphPath('mem')" class="graph-line mem"/>
+          </svg>
+          <div class="graph-sub">{{ formatKB(stats.memory.used) }} / {{ formatKB(stats.memory.total) }} · Cache: {{ formatKB(stats.memory.cached) }}</div>
+        </div>
+        <div class="graph-card">
+          <div class="graph-label">TEMP</div>
+          <div class="graph-value" [class]="getStatus(stats.system.cpuTemp, 50, 70)">{{ stats.system.cpuTemp.toFixed(0) }}°</div>
+          <svg class="mini-graph" viewBox="0 0 200 40" preserveAspectRatio="none">
+            <defs><linearGradient id="tempG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ff6b35" stop-opacity="0.5"/><stop offset="100%" stop-color="#ff6b35" stop-opacity="0"/></linearGradient></defs>
+            <path [attr.d]="getGraphFill('temp')" fill="url(#tempG)"/>
+            <path [attr.d]="getGraphPath('temp')" class="graph-line temp"/>
+          </svg>
+          <div class="graph-sub">Kernel: {{ stats.system.kernel }}</div>
+        </div>
+      </div>
 
-        --gray-900: oklch(19.37% 0.006 300.98);
-        --gray-700: oklch(36.98% 0.014 302.71);
-        --gray-400: oklch(70.9% 0.015 304.04);
+      <!-- Middle Row: Gauges + Info -->
+      <div class="bottom-row">
+        <div class="gauges-col">
+          <div class="gauge-item">
+            <svg viewBox="0 0 80 80"><circle class="gauge-bg" cx="40" cy="40" r="34"/><circle class="gauge-fill" cx="40" cy="40" r="34" [style.strokeDasharray]="(stats.disk.usedPercent / 100) * 214 + ' 214'"/><text x="40" y="38" class="gauge-val">{{ stats.disk.usedPercent }}%</text><text x="40" y="52" class="gauge-lbl">DISK</text></svg>
+          </div>
+          <div class="gauge-item">
+            <svg viewBox="0 0 80 80"><circle class="gauge-bg" cx="40" cy="40" r="34"/><circle class="gauge-fill swap" cx="40" cy="40" r="34" [style.strokeDasharray]="((stats.memory.swap.used / stats.memory.swap.total) * 214) + ' 214'"/><text x="40" y="38" class="gauge-val">{{ ((stats.memory.swap.used / stats.memory.swap.total) * 100).toFixed(0) }}%</text><text x="40" y="52" class="gauge-lbl">SWAP</text></svg>
+          </div>
+          <div class="info-box">
+            <div class="info-row"><span class="info-label">UPTIME</span><span class="info-value">{{ stats.system.uptime }}</span></div>
+            <div class="info-row"><span class="info-label">SERVICES</span><span class="info-value">{{ stats.services }} running</span></div>
+          </div>
+        </div>
 
-        --red-to-pink-to-purple-vertical-gradient: linear-gradient(180deg,
-                var(--orange-red) 0%,
-                var(--vivid-pink) 50%,
-                var(--electric-violet) 100%);
+        <div class="procs-col">
+          <div class="procs-header">
+            TOP PROCESSES
+            <span class="claude-badge" *ngIf="stats.claudeSessions">CLAUDE ×{{ stats.claudeSessions }}</span>
+          </div>
+          <div class="proc-row" *ngFor="let p of stats.processes.slice(0, 8); let i = index">
+            <span class="proc-idx">{{ i + 1 }}</span>
+            <span class="proc-name">{{ getProcessName(p.name) }}</span>
+            <span class="proc-mem">{{ p.memMB }}M</span>
+          </div>
+        </div>
+      </div>
 
-        --red-to-pink-to-purple-horizontal-gradient: linear-gradient(90deg,
-                var(--orange-red) 0%,
-                var(--vivid-pink) 50%,
-                var(--electric-violet) 100%);
+      <!-- Network Section -->
+      <div class="network-section">
+        <div class="section-header">
+          NETWORK
+          <span class="conn-badge">{{ stats.network.connections }} conn</span>
+        </div>
+        <div class="network-grid">
+          <div class="net-card" *ngFor="let iface of stats.network.interfaces">
+            <div class="net-iface">{{ iface.name.toUpperCase() }} <span>{{ iface.ip }}</span></div>
+            <div class="net-rates">
+              <span class="rate download"><span class="arrow">↓</span>{{ formatRate(iface.rxRate) }}/s</span>
+              <span class="rate upload"><span class="arrow">↑</span>{{ formatRate(iface.txRate) }}/s</span>
+            </div>
+            <div class="net-totals">
+              RX: <span>{{ formatBytes(iface.rx) }}</span> · TX: <span>{{ formatBytes(iface.tx) }}</span>
+            </div>
+            <div class="net-errors" *ngIf="iface.errors > 0 || iface.drops > 0" [class.has-errors]="iface.errors > 0">
+              <span *ngIf="iface.errors > 0">{{ iface.errors }} err</span>
+              <span *ngIf="iface.drops > 0">{{ iface.drops }} drop</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        --pill-accent: var(--bright-blue);
+      <!-- PM2 Section -->
+      <div class="pm2-section">
+        <div class="section-header">PM2 APPS</div>
+        <div class="pm2-grid">
+          <div class="pm2-app" *ngFor="let app of stats.pm2">
+            <div class="app-header">
+              <span class="status-dot" [class.online]="app.status === 'online'" [class.stopped]="app.status === 'stopped'" [class.errored]="app.status === 'errored'"></span>
+              <span class="app-name">{{ app.name }}</span>
+            </div>
+            <div class="app-stats">
+              <span class="stat cpu">{{ app.cpu }}%</span>
+              <span class="stat mem">{{ app.mem }}M</span>
+              <span class="stat restarts" *ngIf="app.restarts > 0">↻{{ app.restarts }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-            "Segoe UI Symbol";
-        box-sizing: border-box;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
+    </div>
 
-    h1 {
-        font-size: 3.125rem;
-        color: var(--gray-900);
-        font-weight: 500;
-        line-height: 100%;
-        letter-spacing: -0.125rem;
-        margin: 0;
-        font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-            "Segoe UI Symbol";
-    }
+    <!-- Loading -->
+    <div class="overlay-loading" *ngIf="!stats && !statsError">
+      <div class="spinner"></div>
+      <span>CONNECTING...</span>
+    </div>
 
-    p {
-        margin: 0;
-        color: var(--gray-700);
-    }
-
-    main {
-        width: 100%;
-        min-height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 1rem;
-        box-sizing: inherit;
-        position: relative;
-    }
-
-    .angular-logo {
-        max-width: 9.2rem;
-    }
-
-    .content {
-        display: flex;
-        justify-content: space-around;
-        width: 100%;
-        max-width: 700px;
-        margin-bottom: 3rem;
-    }
-
-    .content h1 {
-        margin-top: 1.75rem;
-    }
-
-    .content p {
-        margin-top: 1.5rem;
-    }
-
-    .divider {
-        width: 1px;
-        background: var(--red-to-pink-to-purple-vertical-gradient);
-        margin-inline: 0.5rem;
-    }
-
-    .pill-group {
-        display: flex;
-        flex-direction: column;
-        align-items: start;
-        flex-wrap: wrap;
-        gap: 1.25rem;
-    }
-
-    .pill {
-        display: flex;
-        align-items: center;
-        --pill-accent: var(--bright-blue);
-        background: color-mix(in srgb, var(--pill-accent) 5%, transparent);
-        color: var(--pill-accent);
-        padding-inline: 0.75rem;
-        padding-block: 0.375rem;
-        border-radius: 2.75rem;
-        border: 0;
-        transition: background 0.3s ease;
-        font-family: var(--inter-font);
-        font-size: 0.875rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: 1.4rem;
-        letter-spacing: -0.00875rem;
-        text-decoration: none;
-    }
-
-    .pill:hover {
-        background: color-mix(in srgb, var(--pill-accent) 15%, transparent);
-    }
-
-    .pill-group .pill:nth-child(6n + 1) {
-        --pill-accent: var(--bright-blue);
-    }
-
-    .pill-group .pill:nth-child(6n + 2) {
-        --pill-accent: var(--french-violet);
-    }
-
-    .pill-group .pill:nth-child(6n + 3),
-    .pill-group .pill:nth-child(6n + 4),
-    .pill-group .pill:nth-child(6n + 5) {
-        --pill-accent: var(--hot-red);
-    }
-
-    .pill-group svg {
-        margin-inline-start: 0.25rem;
-    }
-
-    .social-links {
-        display: flex;
-        align-items: center;
-        gap: 0.73rem;
-        margin-top: 1.5rem;
-    }
-
-    .social-links path {
-        transition: fill 0.3s ease;
-        fill: var(--gray-400);
-    }
-
-    .social-links a:hover svg path {
-        fill: var(--gray-900);
-    }
-
-    @media screen and (max-width: 650px) {
-        .content {
-            flex-direction: column;
-            width: max-content;
-        }
-
-        .divider {
-            height: 1px;
-            width: 100%;
-            background: var(--red-to-pink-to-purple-horizontal-gradient);
-            margin-block: 1.5rem;
-        }
-    }
-</style>
-
-
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
+  </div>
+</div>
 
 <router-outlet />

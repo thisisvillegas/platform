@@ -1,13 +1,12 @@
-import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, Router } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideAuth0 } from '@auth0/auth0-angular';
-import { authHttpInterceptorFn } from '@auth0/auth0-angular';
-import * as Sentry from '@sentry/angular';
+import { ApplicationConfig, ErrorHandler, provideZoneChangeDetection } from "@angular/core";
+import { provideRouter } from "@angular/router";
+import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import { provideAuth0 } from "@auth0/auth0-angular";
+import { authHttpInterceptorFn } from "@auth0/auth0-angular";
+import * as Sentry from "@sentry/angular";
 
-import { routes } from './app.routes';
-import { authConfig } from './auth.config';
-import { environment } from '../environments/environment';
+import { routes } from "./app.routes";
+import { authConfig } from "./auth.config";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,18 +19,8 @@ export const appConfig: ApplicationConfig = {
     {
       provide: ErrorHandler,
       useValue: Sentry.createErrorHandler({
-        showDialog: false, // Don't show the Sentry dialog to users
+        showDialog: false,
       }),
     },
-    {
-      provide: Sentry.TraceService,
-      deps: [Router],
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: () => () => { },
-      deps: [Sentry.TraceService],
-      multi: true,
-    }
   ]
 };

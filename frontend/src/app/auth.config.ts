@@ -24,6 +24,14 @@ export const authConfig: AuthConfig = {
                         audience: 'https://api-home.thisisvillegas.com',
                     }
                 }
+            },
+            {
+                uri: 'https://api-pi.thisisvillegas.com/api/*',
+                tokenOptions: {
+                    authorizationParams: {
+                        audience: 'https://api-home.thisisvillegas.com',
+                    }
+                }
             }
         ]
     }

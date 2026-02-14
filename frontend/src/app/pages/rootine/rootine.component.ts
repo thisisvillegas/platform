@@ -5,7 +5,7 @@ import { AuthService } from '@auth0/auth0-angular';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
-  selector: 'app-rooty',
+  selector: 'app-rootine',
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
@@ -16,7 +16,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <span class="back-arrow">&larr;</span>
           </a>
           <span class="logo-icon">&#127793;</span>
-          <span class="logo-text">Rooty</span>
+          <span class="logo-text">Rootine</span>
+          <div class="tech-stack">
+            <span class="tech-badge react">React</span>
+            <span class="tech-badge vite">Vite</span>
+          </div>
         </div>
         <div class="nav-actions">
           <button class="btn btn-secondary" (click)="logout()">Logout</button>
@@ -26,7 +30,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       <main class="iframe-container">
         <iframe
           [src]="iframeUrl"
-          title="Rooty"
+          title="Rootine"
           frameborder="0"
           allowfullscreen>
         </iframe>
@@ -92,6 +96,31 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       color: #fff;
     }
 
+    .tech-stack {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: 1rem;
+    }
+
+    .tech-badge {
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tech-badge.react {
+      background: #61dafb;
+      color: #000;
+    }
+
+    .tech-badge.vite {
+      background: #646cff;
+      color: #fff;
+    }
+
     .nav-actions {
       display: flex;
       gap: 1rem;
@@ -132,11 +161,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
     }
   `]
 })
-export class RootyComponent {
+export class RootineComponent {
   iframeUrl: SafeResourceUrl;
 
   constructor(private auth: AuthService, private sanitizer: DomSanitizer) {
-    this.iframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://192.168.0.94:3004');
+    this.iframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://rootine.thisisvillegas.com');
   }
 
   logout() {

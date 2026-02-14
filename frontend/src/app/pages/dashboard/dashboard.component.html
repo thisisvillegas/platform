@@ -7,9 +7,10 @@
         <div class="nav-actions">
             <a routerLink="/brain-dump" class="nav-link">Brain Dump</a>
             <a routerLink="/homecontrol" class="nav-link">Homecontrol</a>
-            <a routerLink="/rooty" class="nav-link">Rooty</a>
+            <a routerLink="/rootine" class="nav-link">Rootine</a>
             <a routerLink="/tactiqal" class="nav-link">TactIQal</a>
             <a routerLink="/preferences" class="nav-link">Preferences</a>
+            <button class="btn-server" (click)="openServer()" title="Server Monitor">⬡</button>
             <button class="btn-logout" (click)="logout()">Logout</button>
         </div>
     </nav>
@@ -133,13 +134,17 @@
                         <span class="action-icon">&#127968;</span>
                         <span>Homecontrol</span>
                     </a>
-                    <a routerLink="/rooty" class="action-btn">
+                    <a routerLink="/rootine" class="action-btn">
                         <span class="action-icon">&#127793;</span>
-                        <span>Rooty</span>
+                        <span>Rootine</span>
                     </a>
                     <a routerLink="/tactiqal" class="action-btn">
                         <span class="action-icon">&#9917;</span>
                         <span>TactIQal</span>
+                    </a>
+                    <a routerLink="/server" class="action-btn">
+                        <span class="action-icon">&#128187;</span>
+                        <span>Server</span>
                     </a>
                     <a routerLink="/preferences" class="action-btn">
                         <span class="action-icon">&#9881;</span>

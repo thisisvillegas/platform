@@ -17,6 +17,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </a>
           <span class="logo-icon">&#127968;</span>
           <span class="logo-text">Homecontrol</span>
+          <div class="tech-stack">
+            <span class="tech-badge nextjs">Next.js</span>
+            <span class="tech-badge react">React</span>
+            <span class="tech-badge ts">TypeScript</span>
+          </div>
         </div>
         <div class="nav-actions">
           <button class="btn btn-secondary" (click)="logout()">Logout</button>
@@ -92,6 +97,37 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       color: #fff;
     }
 
+    .tech-stack {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: 1rem;
+    }
+
+    .tech-badge {
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tech-badge.nextjs {
+      background: #000;
+      color: #fff;
+      border: 1px solid #333;
+    }
+
+    .tech-badge.react {
+      background: #61dafb;
+      color: #000;
+    }
+
+    .tech-badge.ts {
+      background: #3178c6;
+      color: #fff;
+    }
+
     .nav-actions {
       display: flex;
       gap: 1rem;
@@ -136,8 +172,7 @@ export class HomecontrolComponent {
   iframeUrl: SafeResourceUrl;
 
   constructor(private auth: AuthService, private sanitizer: DomSanitizer) {
-    // Use Pi's IP for local network access
-    this.iframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl('http://192.168.0.94:3003');
+    this.iframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://homecontrol.thisisvillegas.com');
   }
 
   logout() {

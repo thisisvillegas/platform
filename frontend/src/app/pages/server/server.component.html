@@ -1,0 +1,173 @@
+<div class="hud-container">
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+  
+  <!-- Header Bar -->
+  <header class="hud-header">
+    <a routerLink="/dashboard" class="back-btn">&#9666; EXIT</a>
+    <div class="title">
+      <span class="label">REMUS</span>
+      <span class="divider">//</span>
+      <span class="system">SYSTEM MONITOR v2.0</span>
+    </div>
+    <div class="status">
+      <span class="pulse" [class.paused]="isPaused"></span>
+      <span class="time">{{ lastUpdate }}</span>
+      <button class="ctrl-btn" (click)="togglePause()">{{ isPaused ? '▶' : '❚❚' }}</button>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div class="hud-loading" *ngIf="loading">
+    <div class="hex-loader"></div>
+    <span>ESTABLISHING LINK...</span>
+  </div>
+
+  <!-- Main HUD -->
+  <div class="hud-main" *ngIf="stats && !loading">
+    
+    <!-- Left: Big Graphs -->
+    <div class="graphs-section">
+      
+      <!-- CPU Graph -->
+      <div class="graph-panel">
+        <div class="graph-header">
+          <span class="graph-label">CPU LOAD</span>
+          <span class="graph-value" [class]="getStatusClass(stats.system.loadAverage[0], [2, 4])">
+            {{ stats.system.loadAverage[0].toFixed(2) }}
+          </span>
+        </div>
+        <svg class="big-graph" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="cpuGradBig" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="0" y1="20" x2="300" y2="20" class="grid-line"/>
+          <line x1="0" y1="40" x2="300" y2="40" class="grid-line"/>
+          <line x1="0" y1="60" x2="300" y2="60" class="grid-line"/>
+          <path class="graph-area" [attr.d]="getGraphFillBig('cpu')" fill="url(#cpuGradBig)"/>
+          <path class="graph-stroke cpu" [attr.d]="getGraphPathBig('cpu')"/>
+          <!-- Current value marker -->
+          <circle *ngIf="history.length" class="pulse-dot cpu" 
+                  [attr.cx]="((history.length-1) / (MAX_HISTORY-1)) * 300" 
+                  [attr.cy]="80 - (Math.min(history[history.length-1].cpu, 8) / 8) * 80" r="4"/>
+        </svg>
+        <div class="graph-footer">
+          <span>1m: {{ stats.system.loadAverage[0].toFixed(1) }}</span>
+          <span>5m: {{ stats.system.loadAverage[1].toFixed(1) }}</span>
+          <span>15m: {{ stats.system.loadAverage[2].toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <!-- Memory Graph -->
+      <div class="graph-panel">
+        <div class="graph-header">
+          <span class="graph-label">MEMORY</span>
+          <span class="graph-value" [class]="getStatusClass(stats.memory.usedPercent, [60, 85])">
+            {{ stats.memory.usedPercent }}%
+          </span>
+        </div>
+        <svg class="big-graph" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="memGradBig" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#00ffc8" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#00ffc8" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="20" x2="300" y2="20" class="grid-line"/>
+          <line x1="0" y1="40" x2="300" y2="40" class="grid-line"/>
+          <line x1="0" y1="60" x2="300" y2="60" class="grid-line"/>
+          <path class="graph-area" [attr.d]="getGraphFillBig('mem')" fill="url(#memGradBig)"/>
+          <path class="graph-stroke mem" [attr.d]="getGraphPathBig('mem')"/>
+          <circle *ngIf="history.length" class="pulse-dot mem" 
+                  [attr.cx]="((history.length-1) / (MAX_HISTORY-1)) * 300" 
+                  [attr.cy]="80 - (history[history.length-1].mem / 100) * 80" r="4"/>
+        </svg>
+        <div class="graph-footer">
+          <span>{{ formatBytes(stats.memory.used) }} / {{ formatBytes(stats.memory.total) }}</span>
+          <span>FREE: {{ formatBytes(stats.memory.available) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Gauges -->
+    <div class="gauges-section">
+      
+      <!-- Temp Gauge -->
+      <div class="gauge">
+        <svg viewBox="0 0 120 120">
+          <circle class="gauge-bg" cx="60" cy="60" r="52"/>
+          <circle class="gauge-fill temp" cx="60" cy="60" r="52"
+                  [style.strokeDasharray]="(stats.system.cpuTemp / 85) * 327 + ' 327'"/>
+          <text x="60" y="55" class="gauge-value">{{ stats.system.cpuTemp.toFixed(0) }}°</text>
+          <text x="60" y="72" class="gauge-label">TEMP</text>
+        </svg>
+      </div>
+
+      <!-- Disk Gauge -->
+      <div class="gauge">
+        <svg viewBox="0 0 120 120">
+          <circle class="gauge-bg" cx="60" cy="60" r="52"/>
+          <circle class="gauge-fill disk" cx="60" cy="60" r="52"
+                  [style.strokeDasharray]="(stats.disk.usedPercent / 100) * 327 + ' 327'"
+                  [class]="getStatusClass(stats.disk.usedPercent, [70, 90])"/>
+          <text x="60" y="55" class="gauge-value">{{ stats.disk.usedPercent }}%</text>
+          <text x="60" y="72" class="gauge-label">DISK</text>
+        </svg>
+      </div>
+
+      <!-- Swap Gauge -->
+      <div class="gauge">
+        <svg viewBox="0 0 120 120">
+          <circle class="gauge-bg" cx="60" cy="60" r="52"/>
+          <circle class="gauge-fill swap" cx="60" cy="60" r="52"
+                  [style.strokeDasharray]="((stats.memory.swap.used / stats.memory.swap.total) * 327) + ' 327'"/>
+          <text x="60" y="55" class="gauge-value">{{ ((stats.memory.swap.used / stats.memory.swap.total) * 100).toFixed(0) }}%</text>
+          <text x="60" y="72" class="gauge-label">SWAP</text>
+        </svg>
+      </div>
+
+      <!-- Uptime -->
+      <div class="uptime-box">
+        <span class="up-label">UPTIME</span>
+        <span class="up-value">{{ stats.system.uptime }}</span>
+      </div>
+
+      <!-- Network Mini -->
+      <div class="network-mini">
+        <div class="net-iface" *ngFor="let iface of stats.network.interfaces">
+          <span class="net-name">{{ iface.name }}</span>
+          <span class="net-ip">{{ iface.ip }}</span>
+          <div class="net-traffic">
+            <span class="rx">↓{{ formatNetBytes(iface.rx) }}</span>
+            <span class="tx">↑{{ formatNetBytes(iface.tx) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Processes -->
+    <div class="processes-section">
+      <div class="section-header">
+        <span>PROCESSES</span>
+        <span class="claude-tag" *ngIf="stats.claudeSessions">CLAUDE ×{{ stats.claudeSessions }}</span>
+      </div>
+      <div class="process-list">
+        <div class="proc" *ngFor="let proc of stats.processes; let i = index">
+          <span class="proc-idx">{{ (i + 1).toString().padStart(2, '0') }}</span>
+          <div class="proc-info">
+            <span class="proc-name">{{ proc.name.split(' ')[0].split('/').pop() }}</span>
+            <div class="proc-bar-wrap">
+              <div class="proc-bar" [style.width.%]="proc.memPercent * 12.5"></div>
+            </div>
+          </div>
+          <span class="proc-mem">{{ proc.memMB }}M</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

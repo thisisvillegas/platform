@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '@auth0/auth0-angular';
+import { ServerOverlayService } from '../../services/server-overlay.service';
 import { environment } from '../../../environments/environment';
 import * as Sentry from '@sentry/angular';
 
@@ -49,7 +50,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
+    private serverOverlay: ServerOverlayService
   ) { }
 
   ngOnInit() {
@@ -160,6 +162,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   testSentryError() {
     throw new Error('Test Sentry Error - Frontend');
+  }
+
+  openServer() {
+    this.serverOverlay.open();
   }
 
   logout() {
