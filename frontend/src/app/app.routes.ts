@@ -4,7 +4,22 @@ import { AuthGuard } from '@auth0/auth0-angular';
 export const routes: Routes = [
     {
         path: '',
+        redirectTo: '/login',
+        pathMatch: 'full'
+    },
+    {
+        path: 'login',
         loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
+    },
+    {
+        path: 'door',
+        redirectTo: '/login',
+        pathMatch: 'full'
+    },
+    {
+        path: 'world',
+        loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
+        title: 'Platform - World'
     },
     {
         path: 'callback',
@@ -47,6 +62,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: ''
+        redirectTo: '/login'
     }
 ];

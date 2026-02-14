@@ -1,1 +1,9 @@
-<div id="game-container"></div>
+<div class="game-wrapper">
+  <div id="game-container"></div>
+  @if (isBootstrapping) {
+    <div class="initial-loading">
+      <div class="spinner"></div>
+      <div class="loading-text">INITIALIZING...</div>
+    </div>
+  }
+</div>

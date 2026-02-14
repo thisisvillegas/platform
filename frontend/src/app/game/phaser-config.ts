@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { LoadingScene } from './scenes/loading-scene';
 import { BootScene } from './scenes/boot-scene';
 
 export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig {
@@ -7,10 +8,10 @@ export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig
     parent: parent,
     width: 800,
     height: 600,
-    pixelArt: true, // Critical for crisp 16x16 tiles
+    pixelArt: true,
     roundPixels: true,
     backgroundColor: '#000000',
-    scene: [BootScene],
+    scene: [LoadingScene, BootScene],
     physics: {
       default: 'arcade',
       arcade: {

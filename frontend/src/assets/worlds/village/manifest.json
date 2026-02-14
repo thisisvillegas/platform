@@ -1,0 +1,22 @@
+{
+  "id": "village",
+  "name": "Village World Pack",
+  "version": "0.1.0",
+  "description": "Starting village area with buildings, NPCs, and paths",
+  "tileSize": 16,
+  "assets": {
+    "sprites": [
+      {
+        "key": "test-tile",
+        "path": "sprites/test-tile.png",
+        "frameWidth": 16,
+        "frameHeight": 16
+      }
+    ],
+    "tilemaps": [],
+    "audio": []
+  },
+  "metadata": {
+    "theme": "medieval-village"
+  }
+}

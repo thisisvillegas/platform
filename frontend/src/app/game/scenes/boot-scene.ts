@@ -6,18 +6,22 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Placeholder for asset loading in next plan
+    // Assets loaded in LoadingScene
   }
 
   create(): void {
-    // Test graphics to verify rendering
-    const graphics = this.add.graphics();
-    graphics.fillStyle(0x00ff00, 1);
-    graphics.fillRect(100, 100, 16, 16); // 16x16 pixel test
+    // Display test tile from world pack, scaled up for visibility
+    const testTile = this.add.image(400, 300, 'test-tile');
+    testTile.setScale(4);
 
-    this.add.text(400, 300, 'Phaser 3 Running', {
-      fontSize: '32px',
-      color: '#ffffff'
+    this.add.text(400, 400, 'Phaser 3 Running - Asset Loaded', {
+      fontSize: '24px',
+      color: '#00ff00'
     }).setOrigin(0.5);
+
+    // 16x16 pixel test square — should render crisp
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0xff0000, 1);
+    graphics.fillRect(100, 100, 16, 16);
   }
 }
