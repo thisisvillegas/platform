@@ -160,12 +160,6 @@
 | BLDG-04 | Phase 4 | Pending |
 | BLDG-05 | Phase 4 | Pending |
 | BLDG-06 | Phase 4 | Pending |
-| ENTRY-01 | Phase 5 | Pending |
-| ENTRY-02 | Phase 5 | Pending |
-| ENTRY-03 | Phase 5 | Pending |
-| ENTRY-04 | Phase 5 | Pending |
-| ENTRY-05 | Phase 5 | Pending |
-| ENTRY-06 | Phase 5 | Pending |
 | PASS-01 | Phase 5 | Pending |
 | PASS-02 | Phase 5 | Pending |
 | PASS-03 | Phase 5 | Pending |
@@ -173,27 +167,33 @@
 | PASS-05 | Phase 5 | Pending |
 | PASS-06 | Phase 5 | Pending |
 | PASS-07 | Phase 5 | Pending |
-| THEME-01 | Phase 6 | Pending |
-| THEME-02 | Phase 6 | Pending |
-| THEME-03 | Phase 6 | Pending |
-| THEME-04 | Phase 6 | Pending |
-| THEME-05 | Phase 6 | Pending |
-| SECR-01 | Phase 6 | Pending |
-| SECR-02 | Phase 6 | Pending |
-| SECR-03 | Phase 6 | Pending |
-| SECR-04 | Phase 6 | Pending |
-| SECR-05 | Phase 6 | Pending |
-| SECR-06 | Phase 6 | Pending |
-| AUDIO-01 | Phase 6 | Pending |
-| AUDIO-02 | Phase 6 | Pending |
-| AUDIO-03 | Phase 6 | Pending |
-| AUDIO-04 | Phase 6 | Pending |
+| ENTRY-01 | Phase 6 | Pending |
+| ENTRY-02 | Phase 6 | Pending |
+| ENTRY-03 | Phase 6 | Pending |
+| ENTRY-04 | Phase 6 | Pending |
+| ENTRY-05 | Phase 6 | Pending |
+| ENTRY-06 | Phase 6 | Pending |
+| THEME-01 | Phase 7 | Pending |
+| THEME-02 | Phase 7 | Pending |
+| THEME-03 | Phase 7 | Pending |
+| THEME-04 | Phase 7 | Pending |
+| THEME-05 | Phase 7 | Pending |
+| SECR-01 | Phase 8 | Pending |
+| SECR-02 | Phase 8 | Pending |
+| SECR-03 | Phase 8 | Pending |
+| SECR-04 | Phase 8 | Pending |
+| SECR-05 | Phase 8 | Pending |
+| SECR-06 | Phase 8 | Pending |
+| AUDIO-01 | Phase 9 | Pending |
+| AUDIO-02 | Phase 9 | Pending |
+| AUDIO-03 | Phase 9 | Pending |
+| AUDIO-04 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 55 total
-- Mapped to phases: 55
-- Unmapped: 0 ✓
+- v1 requirements: 56 total
+- Mapped to phases: 56
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after initial definition*
+*Last updated: 2026-02-14 after roadmap creation (9 phases)*
