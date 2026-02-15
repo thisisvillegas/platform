@@ -1,4 +1,5 @@
 export const environment = {
     production: false,
-    apiUrl: 'https://api-pi.thisisvillegas.com'
+    apiUrl: 'http://localhost:3000',
+    debug: true
 };

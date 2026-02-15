@@ -9,7 +9,6 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import rateLimit from "express-rate-limit";
-import { databaseService } from "./database";
 import { jwtCheck } from "./middleware/auth";
 import brainDumpRoutes from "./routes/brainDumpRoutes";
 import serverRoutes from "./routes/serverRoutes";
@@ -62,15 +61,24 @@ const statsRateLimit = rateLimit({
     message: { error: 'Too many requests' }
 });
 
-// Connect to MongoDB (native driver for legacy collections)
-databaseService.connect().catch(console.error);
-
-// Connect Mongoose (for Pass and Guest models)
+// Connect Mongoose (single connection for all models)
 const mongoUri = process.env.MONGODB_URI;
 if (mongoUri) {
-    mongoose.connect(mongoUri)
+    mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 5000,
+        heartbeatFrequencyMS: 10000,
+    })
         .then(() => console.log('✅ Mongoose connected'))
         .catch(err => console.error('❌ Mongoose connection error:', err));
+
+    mongoose.connection.on('disconnected', () => {
+        console.warn('⚠️ Mongoose disconnected — will auto-reconnect');
+    });
+    mongoose.connection.on('reconnected', () => {
+        console.log('✅ Mongoose reconnected');
+    });
+} else {
+    console.error('❌ MONGODB_URI not set — database will not be available');
 }
 
 // Health check endpoint (no auth required)
@@ -139,13 +147,6 @@ async function gracefulShutdown(signal: string): Promise<void> {
         console.log('Mongoose disconnected');
     } catch (err) {
         console.error('Error disconnecting Mongoose:', err);
-    }
-
-    try {
-        await databaseService.disconnect();
-        console.log('Native MongoDB disconnected');
-    } catch (err) {
-        console.error('Error disconnecting native MongoDB:', err);
     }
 
     console.log('Graceful shutdown complete');

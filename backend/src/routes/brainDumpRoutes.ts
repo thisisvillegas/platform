@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 import multer from 'multer';
 import { databaseService, Bucket, Card, ParsedIdea } from '../database';
 import { claudeService } from '../services/claudeService';
@@ -188,7 +188,7 @@ router.post('/cards', async (req: Request, res: Response) => {
         }
 
         const card = await databaseService.createCard(userId, {
-            bucketId: new ObjectId(bucketId),
+            bucketId: new Types.ObjectId(bucketId),
             title,
             content,
             labels,
@@ -222,7 +222,7 @@ router.put('/cards/:id', async (req: Request, res: Response) => {
         if (isActionable !== undefined) updateData.isActionable = isActionable;
         if (priority !== undefined) updateData.priority = priority;
         if (reminder !== undefined) updateData.reminder = reminder;
-        if (bucketId !== undefined) updateData.bucketId = new ObjectId(bucketId);
+        if (bucketId !== undefined) updateData.bucketId = new Types.ObjectId(bucketId);
 
         const card = await databaseService.updateCard(userId, id, updateData);
         if (!card) {
