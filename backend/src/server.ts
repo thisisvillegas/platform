@@ -7,11 +7,13 @@ import "./instrument";
 import * as Sentry from "@sentry/node";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { auth } from "express-oauth2-jwt-bearer";
 import { lambdaService } from "./lambdaService";
 import { databaseService } from "./database";
+import { jwtCheck } from "./middleware/auth";
 import brainDumpRoutes from "./routes/brainDumpRoutes";
 import serverRoutes from "./routes/serverRoutes";
+import passRoutes from "./routes/passRoutes";
+import guestRoutes from "./routes/guestRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,11 +33,13 @@ app.get("/health", (req: Request, res: Response) => {
 // Server stats (no auth required - internal only)
 app.use("/api/server", serverRoutes);
 
-const jwtCheck = auth({
-    audience: process.env.AUTH0_AUDIENCE,
-    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-});
+// Pass validation is public, CRUD operations are Auth0 protected
+app.use("/api/passes", passRoutes);
 
+// Guest account routes (guest JWT required)
+app.use("/api/guest", guestRoutes);
+
+// Apply Auth0 JWT check to all other /api routes
 app.use("/api", jwtCheck);
 
 // Brain Dump routes
