@@ -133,9 +133,8 @@ export class CollectiblesPanel {
 
       // Badge icon
       const badge = this.scene.add.text(gridX, gridY, achievement.icon, {
-        fontSize: '24px',
-        alpha: isUnlocked ? 1.0 : 0.3
-      }).setOrigin(0.5);
+        fontSize: '24px'
+      }).setOrigin(0.5).setAlpha(isUnlocked ? 1.0 : 0.3);
 
       // Badge name
       const badgeName = this.scene.add.text(gridX, gridY + 20, achievement.name, {

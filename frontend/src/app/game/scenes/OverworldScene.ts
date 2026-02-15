@@ -407,7 +407,7 @@ export class OverworldScene extends Phaser.Scene {
     this.sessionStartTime = Date.now();
 
     // Listen for achievement unlocks
-    this.achievementEngine.on('achievement-unlocked', (achievement) => {
+    this.achievementEngine.on('achievement-unlocked', (achievement: any) => {
       this.achievementToast.show(achievement);
     });
 
