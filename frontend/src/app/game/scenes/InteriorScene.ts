@@ -24,6 +24,7 @@ export class InteriorScene extends Phaser.Scene {
   private buildingType = 'placeholder';
   private appRoute?: string;
   private appUrl?: string;
+  private requiresAuth = false;
   private description = '';
   private returnX = 0;
   private returnY = 0;
@@ -41,6 +42,7 @@ export class InteriorScene extends Phaser.Scene {
     this.buildingType = data.buildingType || 'placeholder';
     this.appRoute = data.appRoute;
     this.appUrl = data.appUrl;
+    this.requiresAuth = data.requiresAuth ?? false;
     this.description = data.description || '';
     this.returnX = data.returnX || 0;
     this.returnY = data.returnY || 0;
@@ -91,8 +93,8 @@ export class InteriorScene extends Phaser.Scene {
 
     // Exit prompt (always shown)
     this.add.text(centerX, centerY + 120, 'Press ESC to go back outside', {
-      fontSize: '10px',
-      color: '#555577',
+      fontSize: '14px',
+      color: '#8888bb',
       fontFamily: 'monospace'
     }).setOrigin(0.5);
 
@@ -118,16 +120,30 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   private createAppContent(cx: number, cy: number): void {
+    // Auth warning for guest visitors
+    if (this.requiresAuth && this.isGuestUser()) {
+      this.add.text(cx, cy - 5, 'Owner access only — requires login', {
+        fontSize: '12px',
+        color: '#ff8844',
+        fontFamily: 'monospace'
+      }).setOrigin(0.5);
+    }
+
     // Decorative border box
     const graphics = this.add.graphics();
     graphics.lineStyle(1, 0x00ffff, 0.3);
-    graphics.strokeRect(cx - 180, cy - 10, 360, 60);
+    graphics.strokeRect(cx - 180, cy + 5, 360, 60);
 
-    this.add.text(cx, cy + 20, `Press ENTER to launch`, {
+    this.add.text(cx, cy + 35, `Press ENTER to launch`, {
       fontSize: '16px',
       color: '#00ff88',
       fontFamily: 'monospace'
     }).setOrigin(0.5);
+  }
+
+  private isGuestUser(): boolean {
+    // Guest visitors enter via the pass system and have a guest_token
+    return !!localStorage.getItem('guest_token');
   }
 
   private createExternalContent(cx: number, cy: number): void {

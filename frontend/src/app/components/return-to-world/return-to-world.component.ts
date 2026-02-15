@@ -79,7 +79,7 @@ export class ReturnToWorldComponent implements OnInit, OnDestroy {
   }
 
   private checkVisibility(url: string): void {
-    const isHidden = HIDDEN_ROUTES.some(r => url.startsWith(r));
+    const isHidden = url === '/' || HIDDEN_ROUTES.some(r => url.startsWith(r));
     this.visible = !isHidden && this.worldNav.hasWorldSession();
   }
 }
