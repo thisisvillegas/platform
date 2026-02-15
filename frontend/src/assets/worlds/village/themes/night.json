@@ -1,0 +1,23 @@
+{
+  "id": "night",
+  "name": "Night",
+  "palette": {
+    "overlay": {
+      "color": "#1a1a3d",
+      "alpha": 0.4
+    }
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0.8,
+    "radius": 100
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "audio": {
+    "ambient": "assets/audio/night-ambient.mp3",
+    "music": "assets/audio/night-music.mp3"
+  }
+}

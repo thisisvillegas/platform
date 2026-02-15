@@ -1,0 +1,20 @@
+{
+  "id": "default",
+  "name": "Day",
+  "palette": {
+    "sky": "#87CEEB"
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0,
+    "radius": 0
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "audio": {
+    "ambient": "assets/audio/day-ambient.mp3",
+    "music": "assets/audio/day-music.mp3"
+  }
+}
