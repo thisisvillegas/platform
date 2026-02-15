@@ -1,0 +1,45 @@
+{
+  "id": "interior-war-room",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Commander",
+      "text": "At ease. Welcome to the War Room. Strategy is everything in here.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Commander",
+      "text": [
+        "Tactiqal is a tactical planning tool. Think task management meets strategy board.",
+        "You lay out objectives, assign priorities, and track execution. Built for people who think in plans, not lists."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Got it, thanks!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Commander",
+      "text": "The portal to Tactiqal is on the right flank. Owner clearance required — this is a restricted area.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Commander",
+      "text": "Look around, but don't touch the strategy table. Took hours to set up. Portal's on the right when you're done.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Commander",
+      "text": "Press ESC to return to the field. Dismissed."
+    }
+  ]
+}

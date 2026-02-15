@@ -1,0 +1,45 @@
+{
+  "id": "interior-server-shack",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Technician",
+      "text": "Careful with the cables! This is the nerve center of the whole village.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Technician",
+      "text": [
+        "Server Stats gives you a live view of the Raspberry Pi running this entire platform. CPU, memory, temperature, disk — all real-time.",
+        "Network traffic, PM2 processes, even top system processes. It's like an X-ray of the machine keeping this village alive."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "That's amazing!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Technician",
+      "text": "The portal to Server Stats is on the right. Owner access only — don't want just anyone poking around the server internals.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Technician",
+      "text": "Look at the monitors — each one tracks a different metric. The green text? That's real data. Portal's on the right.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Technician",
+      "text": "Press ESC to head back outside. Keep the servers cool!"
+    }
+  ]
+}

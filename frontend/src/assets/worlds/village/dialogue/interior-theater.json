@@ -1,0 +1,45 @@
+{
+  "id": "interior-theater",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Projectionist",
+      "text": "Welcome to the Theater! Take a seat. The show is always running here.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Projectionist",
+      "text": [
+        "The GIF Gallery is a media collection app. Upload, organize, and share your favorite GIFs and images.",
+        "It's got tagging, search, and a slick viewing mode. Think of it as your personal media library."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Sounds fun!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Projectionist",
+      "text": "The portal to the GIF Gallery is on the right. This one's open to everyone — no ticket needed.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Projectionist",
+      "text": "Check out the posters on the walls — classic selections. The portal is on the right when you're ready for the real show.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Projectionist",
+      "text": "Press ESC to head back outside. Enjoy the show!"
+    }
+  ]
+}

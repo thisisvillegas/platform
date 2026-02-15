@@ -1,0 +1,45 @@
+{
+  "id": "interior-gridup",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Engineer",
+      "text": "Hey! Welcome to the GridUp Arena. Everything here runs on grids and logic.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Engineer",
+      "text": [
+        "GridUp is a grid-based builder tool. You place elements on a grid to create layouts, puzzles, or designs.",
+        "It's surprisingly versatile — people use it for floor plans, game levels, or just pixel art. Built with real-time collaboration in mind."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "That's neat!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Engineer",
+      "text": "The portal to GridUp is on the right. Jump in — no account needed, just start building.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Engineer",
+      "text": "Check out the terminals around the room. Each one shows a different grid project. Portal's on the right when you're ready.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Engineer",
+      "text": "Press ESC to head back outside. Build something cool!"
+    }
+  ]
+}

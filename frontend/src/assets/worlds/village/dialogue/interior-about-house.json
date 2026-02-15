@@ -1,0 +1,51 @@
+{
+  "id": "interior-about-house",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Historian",
+      "text": "Ah, a visitor! Welcome to the About House. This is where we keep the story of how this place came to be.",
+      "choices": [
+        { "text": "Who built this village?", "nextNodeId": "about-creator" },
+        { "text": "What's the tech behind it?", "nextNodeId": "about-tech" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-creator",
+      "speaker": "Historian",
+      "text": [
+        "Andres Villegas — a full-stack developer who wanted his portfolio to be more than a list of links.",
+        "He thought: what if visitors could explore projects like rooms in a world? Walk up to a building, step inside, and actually use the app. So he built this."
+      ],
+      "choices": [
+        { "text": "What's the tech behind it?", "nextNodeId": "about-tech" },
+        { "text": "That's really cool!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "about-tech",
+      "speaker": "Historian",
+      "text": [
+        "The game engine is Phaser 3, wrapped in Angular 19. The backend is Express with MongoDB. Everything runs on a single Raspberry Pi 4.",
+        "8 gigs of RAM, a 235GB drive, and a Wi-Fi connection. That tiny computer serves every app, every NPC, every pixel you see."
+      ],
+      "choices": [
+        { "text": "Who built this village?", "nextNodeId": "about-creator" },
+        { "text": "Impressive. Thanks!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "browse",
+      "speaker": "Historian",
+      "text": "Take your time with the bookshelves. Each one holds a chapter of the project's history. Lots of late nights in those pages.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Historian",
+      "text": "Press ESC to head back outside. Thanks for taking the time to learn about this place!"
+    }
+  ]
+}

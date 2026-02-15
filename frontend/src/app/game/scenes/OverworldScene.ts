@@ -103,10 +103,22 @@ export class OverworldScene extends Phaser.Scene {
     // Load world manifest for building metadata
     this.load.json('world-manifest', '/assets/worlds/village/manifest.json');
 
-    // Load dialogue JSON files
+    // Load dialogue JSON files (overworld NPCs)
     this.load.json('dialogue-claude-townsquare', '/assets/worlds/village/dialogue/claude-townsquare.json');
     this.load.json('dialogue-signpost', '/assets/worlds/village/dialogue/signpost.json');
     this.load.json('dialogue-villager-01', '/assets/worlds/village/dialogue/villager-01.json');
+
+    // Load interior dialogue JSON files (shared cache, available in InteriorScene)
+    const dialogueBase = '/assets/worlds/village/dialogue';
+    const interiorIds = [
+      'interior-tavern', 'interior-smart-home', 'interior-war-room',
+      'interior-greenhouse', 'interior-theater', 'interior-desaogo',
+      'interior-gridup', 'interior-server-shack', 'interior-about-house',
+      'interior-plaza'
+    ];
+    for (const id of interiorIds) {
+      this.load.json(`dialogue-${id}`, `${dialogueBase}/${id}.json`);
+    }
 
     // Load audio assets
     const audioBase = '/assets/worlds/village/audio';

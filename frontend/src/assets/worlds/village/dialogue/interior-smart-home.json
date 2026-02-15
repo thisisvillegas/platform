@@ -1,0 +1,45 @@
+{
+  "id": "interior-smart-home",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Tech",
+      "text": "Welcome to Smart Home HQ! Everything in here is connected. Lights, temperature, you name it.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Tech",
+      "text": [
+        "Homecontrol is a smart home dashboard. It lets you monitor and control devices around the house from one place.",
+        "Lights, thermostat, sensors — all unified into a clean interface. Built with Next.js and running right here on the Pi."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Cool, thanks!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Tech",
+      "text": "The portal to Homecontrol is on the right side of the room. It requires owner access since it controls real devices.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Tech",
+      "text": "Feel free to check out the monitors. Each one shows a different sensor feed. The portal is on the right when you're ready.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Tech",
+      "text": "Press ESC to head back outside. Stay connected!"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "interior-desaogo",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Artist",
+      "text": "Welcome to the studio! This is where design comes to life.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Artist",
+      "text": [
+        "Desaogo is a design tool. It helps you create and iterate on visual work with a clean, focused interface.",
+        "Think of it as a creative workspace — stripped down to what matters. No clutter, just creation."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Nice, thanks!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Artist",
+      "text": "The portal to Desaogo is on the right side. Open to everyone — go create something!",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Artist",
+      "text": "Check out the artwork on the walls. Each piece was made using the tool. The portal is on the right whenever inspiration strikes.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Artist",
+      "text": "Press ESC to head back outside. Stay creative!"
+    }
+  ]
+}

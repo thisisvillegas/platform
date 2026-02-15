@@ -146,6 +146,178 @@
       "dialogueId": "villager-01"
     }
   ],
+  "interiors": {
+    "tavern": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#3d2b1f",
+      "wallColor": "#5c3a21",
+      "accentColor": "#d4a24e",
+      "npc": { "name": "Bartender", "spriteKey": "npc-bartender", "dialogueId": "interior-tavern", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Brain Dump", "glowColor": "#d4a24e" },
+      "decorations": [
+        { "type": "barrel", "tileX": 1, "tileY": 2 },
+        { "type": "barrel", "tileX": 2, "tileY": 2 },
+        { "type": "table", "tileX": 5, "tileY": 3 },
+        { "type": "table", "tileX": 5, "tileY": 7 },
+        { "type": "lamp", "tileX": 1, "tileY": 8 },
+        { "type": "lamp", "tileX": 11, "tileY": 8 }
+      ]
+    },
+    "smart-home": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#1a2a3a",
+      "wallColor": "#0d1b2a",
+      "accentColor": "#00bfff",
+      "npc": { "name": "Tech", "spriteKey": "npc-tech", "dialogueId": "interior-smart-home", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Homecontrol", "glowColor": "#00bfff" },
+      "decorations": [
+        { "type": "monitor", "tileX": 1, "tileY": 2 },
+        { "type": "monitor", "tileX": 3, "tileY": 2 },
+        { "type": "computer", "tileX": 6, "tileY": 2 },
+        { "type": "lamp", "tileX": 11, "tileY": 2 },
+        { "type": "plant", "tileX": 1, "tileY": 8 },
+        { "type": "rug", "tileX": 6, "tileY": 5 }
+      ]
+    },
+    "war-room": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#1a1a1a",
+      "wallColor": "#2a1520",
+      "accentColor": "#cc3333",
+      "npc": { "name": "Commander", "spriteKey": "npc-commander", "dialogueId": "interior-war-room", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Tactiqal", "glowColor": "#cc3333" },
+      "decorations": [
+        { "type": "table", "tileX": 6, "tileY": 4 },
+        { "type": "poster", "tileX": 2, "tileY": 2 },
+        { "type": "poster", "tileX": 10, "tileY": 2 },
+        { "type": "crate", "tileX": 1, "tileY": 8 },
+        { "type": "crate", "tileX": 2, "tileY": 8 },
+        { "type": "lamp", "tileX": 11, "tileY": 8 }
+      ]
+    },
+    "greenhouse": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#2d3a25",
+      "wallColor": "#1e2b18",
+      "accentColor": "#66cc66",
+      "npc": { "name": "Gardener", "spriteKey": "npc-gardener", "dialogueId": "interior-greenhouse", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Rootine", "glowColor": "#66cc66" },
+      "decorations": [
+        { "type": "plant", "tileX": 1, "tileY": 2 },
+        { "type": "plant", "tileX": 3, "tileY": 2 },
+        { "type": "plant", "tileX": 5, "tileY": 2 },
+        { "type": "plant", "tileX": 1, "tileY": 8 },
+        { "type": "plant", "tileX": 11, "tileY": 8 },
+        { "type": "table", "tileX": 7, "tileY": 7 }
+      ]
+    },
+    "theater": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#1a1028",
+      "wallColor": "#2a1840",
+      "accentColor": "#cc66ff",
+      "npc": { "name": "Projectionist", "spriteKey": "npc-projectionist", "dialogueId": "interior-theater", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "GIF Gallery", "glowColor": "#cc66ff" },
+      "decorations": [
+        { "type": "monitor", "tileX": 6, "tileY": 2 },
+        { "type": "poster", "tileX": 1, "tileY": 2 },
+        { "type": "poster", "tileX": 11, "tileY": 2 },
+        { "type": "lamp", "tileX": 1, "tileY": 8 },
+        { "type": "lamp", "tileX": 11, "tileY": 8 },
+        { "type": "rug", "tileX": 6, "tileY": 5 }
+      ]
+    },
+    "desaogo": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#3a2a1a",
+      "wallColor": "#4d3322",
+      "accentColor": "#e08050",
+      "npc": { "name": "Artist", "spriteKey": "npc-artist", "dialogueId": "interior-desaogo", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Desaogo", "glowColor": "#e08050" },
+      "decorations": [
+        { "type": "poster", "tileX": 2, "tileY": 2 },
+        { "type": "poster", "tileX": 5, "tileY": 2 },
+        { "type": "poster", "tileX": 8, "tileY": 2 },
+        { "type": "table", "tileX": 6, "tileY": 7 },
+        { "type": "plant", "tileX": 1, "tileY": 8 },
+        { "type": "lamp", "tileX": 11, "tileY": 2 }
+      ]
+    },
+    "gridup": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#0a1a2a",
+      "wallColor": "#0d2240",
+      "accentColor": "#3399ff",
+      "npc": { "name": "Engineer", "spriteKey": "npc-engineer", "dialogueId": "interior-gridup", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "GridUp", "glowColor": "#3399ff" },
+      "decorations": [
+        { "type": "computer", "tileX": 2, "tileY": 2 },
+        { "type": "computer", "tileX": 4, "tileY": 2 },
+        { "type": "monitor", "tileX": 8, "tileY": 2 },
+        { "type": "table", "tileX": 6, "tileY": 7 },
+        { "type": "lamp", "tileX": 1, "tileY": 8 },
+        { "type": "lamp", "tileX": 11, "tileY": 8 }
+      ]
+    },
+    "server-shack": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#1a1a1a",
+      "wallColor": "#222222",
+      "accentColor": "#33ff66",
+      "npc": { "name": "Technician", "spriteKey": "npc-technician", "dialogueId": "interior-server-shack", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Server Stats", "glowColor": "#33ff66" },
+      "decorations": [
+        { "type": "computer", "tileX": 1, "tileY": 2 },
+        { "type": "computer", "tileX": 3, "tileY": 2 },
+        { "type": "monitor", "tileX": 5, "tileY": 2 },
+        { "type": "monitor", "tileX": 7, "tileY": 2 },
+        { "type": "crate", "tileX": 10, "tileY": 8 },
+        { "type": "crate", "tileX": 11, "tileY": 8 }
+      ]
+    },
+    "about-house": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#2a2520",
+      "wallColor": "#3a3530",
+      "accentColor": "#e0d0b0",
+      "npc": { "name": "Historian", "spriteKey": "npc-historian", "dialogueId": "interior-about-house", "tileX": 3, "tileY": 5 },
+      "decorations": [
+        { "type": "bookshelf", "tileX": 1, "tileY": 2 },
+        { "type": "bookshelf", "tileX": 3, "tileY": 2 },
+        { "type": "bookshelf", "tileX": 5, "tileY": 2 },
+        { "type": "table", "tileX": 8, "tileY": 5 },
+        { "type": "lamp", "tileX": 7, "tileY": 2 },
+        { "type": "plant", "tileX": 11, "tileY": 8 },
+        { "type": "rug", "tileX": 6, "tileY": 5 }
+      ]
+    },
+    "plaza": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#2a2a30",
+      "wallColor": "#3a3a44",
+      "accentColor": "#aabbcc",
+      "npc": { "name": "Mayor", "spriteKey": "npc-mayor", "dialogueId": "interior-plaza", "tileX": 3, "tileY": 5 },
+      "portal": { "tileX": 9, "tileY": 5, "label": "Plaza", "glowColor": "#aabbcc" },
+      "decorations": [
+        { "type": "plant", "tileX": 1, "tileY": 2 },
+        { "type": "plant", "tileX": 11, "tileY": 2 },
+        { "type": "table", "tileX": 6, "tileY": 4 },
+        { "type": "poster", "tileX": 4, "tileY": 2 },
+        { "type": "poster", "tileX": 8, "tileY": 2 },
+        { "type": "lamp", "tileX": 1, "tileY": 8 }
+      ]
+    }
+  },
   "theme": {
     "name": "medieval-village"
   },

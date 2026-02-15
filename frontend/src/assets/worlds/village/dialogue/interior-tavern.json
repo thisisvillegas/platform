@@ -1,0 +1,45 @@
+{
+  "id": "interior-tavern",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Bartender",
+      "text": "Welcome to the Tavern! Pull up a seat. We serve ideas here, not drinks.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Bartender",
+      "text": [
+        "Brain Dump is an AI-powered note-taking app. You throw in raw thoughts and it helps organize them.",
+        "Think of it like a conversation with your own brain. You talk, it listens, and together you make sense of the mess."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Interesting, thanks!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Bartender",
+      "text": "See that glowing doorway on the right? Step through it to launch Brain Dump. Fair warning — the owner needs to be logged in for this one.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Bartender",
+      "text": "Take your time. Check out the barrels, the tables... it's cozy in here. The portal is on the right whenever you're ready.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Bartender",
+      "text": "Press ESC anytime to head back outside. See you around!"
+    }
+  ]
+}

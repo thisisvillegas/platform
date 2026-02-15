@@ -1,0 +1,45 @@
+{
+  "id": "interior-plaza",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Mayor",
+      "text": "Welcome to the Plaza office! This is where community happens.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Mayor",
+      "text": [
+        "Plaza is a community platform. A place to connect, share, and collaborate with others.",
+        "Think of it as the village's town hall, but online. Events, discussions, and shared spaces — all in one spot."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Sounds great!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Mayor",
+      "text": "The portal to Plaza is on the right. Open to everyone — community is for all.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Mayor",
+      "text": "Have a look around. The bulletin boards have community updates. Portal's on the right whenever you're ready to jump in.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Mayor",
+      "text": "Press ESC to head back outside. See you in the plaza!"
+    }
+  ]
+}

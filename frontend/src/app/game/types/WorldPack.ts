@@ -50,6 +50,40 @@ export interface WorldPackMaps {
   interiors?: Record<string, string>;
 }
 
+// --- Interior scene config types ---
+
+export interface InteriorNPCConfig {
+  name: string;
+  spriteKey: string;
+  dialogueId: string;
+  tileX: number;
+  tileY: number;
+}
+
+export interface InteriorPortalConfig {
+  tileX: number;
+  tileY: number;
+  label: string;
+  glowColor: string;
+}
+
+export interface InteriorDecoration {
+  type: 'table' | 'bookshelf' | 'plant' | 'computer' | 'monitor' | 'poster' | 'lamp' | 'rug' | 'barrel' | 'crate';
+  tileX: number;
+  tileY: number;
+}
+
+export interface InteriorConfig {
+  roomWidth: number;
+  roomHeight: number;
+  floorColor: string;
+  wallColor: string;
+  accentColor: string;
+  npc: InteriorNPCConfig;
+  portal?: InteriorPortalConfig;
+  decorations: InteriorDecoration[];
+}
+
 export interface WorldPackManifest {
   id: string;
   name: string;

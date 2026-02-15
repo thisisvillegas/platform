@@ -1,0 +1,45 @@
+{
+  "id": "interior-greenhouse",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Gardener",
+      "text": "Oh, hello! Watch your step — the plants here grow fast when you tend to them every day.",
+      "choices": [
+        { "text": "What does this app do?", "nextNodeId": "about-app" },
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "I'll look around", "nextNodeId": "browse" }
+      ]
+    },
+    {
+      "id": "about-app",
+      "speaker": "Gardener",
+      "text": [
+        "Rootine is a habit and routine tracker. You plant habits like seeds and watch them grow with consistency.",
+        "It's about building small daily routines that compound over time. The garden metaphor isn't just decoration — it's the whole philosophy."
+      ],
+      "choices": [
+        { "text": "Show me the portal", "nextNodeId": "portal" },
+        { "text": "Love that idea!", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "portal",
+      "speaker": "Gardener",
+      "text": "The portal to Rootine is over by the tall fern on the right. Owner access needed — your garden is personal.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "browse",
+      "speaker": "Gardener",
+      "text": "Enjoy the greenery! Each plant represents a different habit. The portal is on the right whenever you're ready.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Gardener",
+      "text": "Press ESC to head back outside. Remember — consistency is everything!"
+    }
+  ]
+}
