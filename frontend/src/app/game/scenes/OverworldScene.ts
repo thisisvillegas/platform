@@ -17,6 +17,7 @@ import { SecretsManager, Collectible } from '../systems/SecretsManager';
 import { AchievementEngine, GameState } from '../systems/AchievementEngine';
 import { AchievementToast } from '../ui/AchievementToast';
 import { CollectiblesPanel } from '../ui/CollectiblesPanel';
+import { environment } from '../../../environments/environment';
 
 interface ManifestJSON {
   buildings?: WorldPackBuilding[];
@@ -52,6 +53,7 @@ export class OverworldScene extends Phaser.Scene {
   private konamiSequence: string[] = [];
   private konamiTarget = ['UP', 'UP', 'DOWN', 'DOWN', 'LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'B', 'A'];
   private panelOpened = false;
+  private lastAutoSave = 0;
 
   // Public tilemap for ThemeEngine decoration layer access
   public tilemap!: Phaser.Tilemaps.Tilemap;
@@ -416,6 +418,9 @@ export class OverworldScene extends Phaser.Scene {
     await this.achievementEngine.loadAchievements();
     this.sessionStartTime = Date.now();
 
+    // Load saved progress
+    await this.loadProgress();
+
     // Listen for achievement unlocks
     this.achievementEngine.on('achievement-unlocked', (achievement: any) => {
       this.achievementToast.show(achievement);
@@ -453,6 +458,9 @@ export class OverworldScene extends Phaser.Scene {
         }
       }
     });
+
+    // Setup auto-save on beforeunload
+    this.setupAutoSave();
   }
 
   private toggleCollectiblesPanel(): void {
@@ -549,6 +557,12 @@ export class OverworldScene extends Phaser.Scene {
     // Time-based achievement check (every second)
     if (this.time.now % 1000 < 16) { // Approximately every second
       this.checkAchievements();
+    }
+
+    // Auto-save progress every 30 seconds
+    if (this.time.now - this.lastAutoSave > 30000) {
+      this.lastAutoSave = this.time.now;
+      this.saveProgress();
     }
 
     // NPC proximity check
@@ -677,5 +691,101 @@ export class OverworldScene extends Phaser.Scene {
     const props = door.properties as Array<{ name: string; value: unknown }>;
     const prop = props.find(p => p.name === name);
     return prop?.value as string | undefined;
+  }
+
+  private async loadProgress(): Promise<void> {
+    const token = localStorage.getItem('guest_token');
+    if (!token) {
+      console.log('No guest token, skipping progress load');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/api/world/progress`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to load progress:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.progress) {
+        const p = data.progress;
+
+        // Restore collectibles
+        if (p.collectibles && Array.isArray(p.collectibles)) {
+          this.secretsManager.setCollected(p.collectibles);
+        }
+
+        // Restore achievements
+        if (p.achievements && Array.isArray(p.achievements)) {
+          this.achievementEngine.setUnlocked(p.achievements);
+        }
+
+        // Restore tracking data
+        if (p.buildingsVisited && Array.isArray(p.buildingsVisited)) {
+          this.buildingsVisited = new Set(p.buildingsVisited);
+        }
+        if (p.npcsInteracted && Array.isArray(p.npcsInteracted)) {
+          this.npcsInteracted = new Set(p.npcsInteracted);
+        }
+        if (typeof p.dialogueCount === 'number') {
+          this.dialogueCountTotal = p.dialogueCount;
+        }
+        if (typeof p.timeSpent === 'number') {
+          this.timeSpentTotal = p.timeSpent;
+        }
+
+        console.log('Progress loaded successfully');
+      }
+    } catch (error) {
+      console.error('Error loading progress:', error);
+    }
+  }
+
+  private async saveProgress(): Promise<void> {
+    const token = localStorage.getItem('guest_token');
+    if (!token) {
+      return; // Silent fail if no token
+    }
+
+    const player = this.playerController.sprite;
+    const progressData = {
+      collectibles: this.secretsManager.getCollected(),
+      achievements: this.achievementEngine.getUnlocked(),
+      buildingsVisited: Array.from(this.buildingsVisited),
+      npcsInteracted: Array.from(this.npcsInteracted),
+      dialogueCount: this.dialogueCountTotal,
+      timeSpent: this.getTimeSpent(),
+      lastPosition: { x: Math.round(player.x), y: Math.round(player.y) }
+    };
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/api/world/progress`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(progressData)
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to save progress:', response.status);
+      }
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  }
+
+  private setupAutoSave(): void {
+    // Save progress when leaving the page
+    window.addEventListener('beforeunload', () => {
+      this.saveProgress();
+    });
   }
 }
