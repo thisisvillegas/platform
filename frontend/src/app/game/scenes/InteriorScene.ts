@@ -118,11 +118,12 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   private createAppContent(cx: number, cy: number): void {
+    // Decorative border box
     const graphics = this.add.graphics();
     graphics.lineStyle(1, 0x00ffff, 0.3);
     graphics.strokeRect(cx - 180, cy - 10, 360, 60);
 
-    this.add.text(cx, cy + 20, 'Press ENTER to launch', {
+    this.add.text(cx, cy + 20, `Press ENTER to launch`, {
       fontSize: '16px',
       color: '#00ff88',
       fontFamily: 'monospace'
@@ -134,7 +135,7 @@ export class InteriorScene extends Phaser.Scene {
     graphics.lineStyle(1, 0x00ffff, 0.3);
     graphics.strokeRect(cx - 180, cy - 10, 360, 60);
 
-    this.add.text(cx, cy + 20, 'Press ENTER to visit', {
+    this.add.text(cx, cy + 20, `Press ENTER to visit`, {
       fontSize: '16px',
       color: '#ffcc00',
       fontFamily: 'monospace'
@@ -165,6 +166,7 @@ export class InteriorScene extends Phaser.Scene {
       fontStyle: 'italic'
     }).setOrigin(0.5);
 
+    // Construction icon
     this.add.text(cx, cy + 60, '[ Under Construction ]', {
       fontSize: '12px',
       color: '#444466',
