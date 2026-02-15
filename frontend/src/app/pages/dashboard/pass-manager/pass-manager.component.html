@@ -1,0 +1,117 @@
+<div class="pass-manager-container">
+  <div class="manager-header">
+    <div class="header-content">
+      <div class="header-icon">🎫</div>
+      <div class="header-text">
+        <h1>Pass Manager</h1>
+        <p>Create and manage temporary access codes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error display -->
+  <div class="error-banner" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Create pass form -->
+  <div class="create-section">
+    <h2>Create New Pass</h2>
+    <form (submit)="createPass()" class="create-form">
+      <div class="form-group">
+        <label for="label">Label</label>
+        <input
+          type="text"
+          id="label"
+          [(ngModel)]="newPassLabel"
+          name="label"
+          placeholder="e.g., Friend's access, Demo account"
+          required
+          [disabled]="creating"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="expiry">Expires in (days)</label>
+        <input
+          type="number"
+          id="expiry"
+          [(ngModel)]="newPassExpiry"
+          name="expiry"
+          min="1"
+          max="365"
+          required
+          [disabled]="creating"
+        />
+      </div>
+
+      <button type="submit" class="btn-create" [disabled]="creating">
+        <span *ngIf="!creating">Create Pass</span>
+        <span *ngIf="creating">Creating...</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Passes list -->
+  <div class="passes-section">
+    <h2>Active Passes</h2>
+
+    <div class="loading-state" *ngIf="loading">
+      Loading passes...
+    </div>
+
+    <div class="no-passes" *ngIf="!loading && passes.length === 0">
+      No passes created yet. Create your first pass above.
+    </div>
+
+    <div class="passes-grid" *ngIf="!loading && passes.length > 0">
+      <div class="pass-card" *ngFor="let pass of passes" [class.expired]="pass.status === 'expired'">
+        <div class="pass-header">
+          <div class="pass-label">{{ pass.label }}</div>
+          <div class="pass-status" [ngClass]="getStatusClass(pass.status)">
+            {{ pass.status }}
+          </div>
+        </div>
+
+        <div class="pass-code-section">
+          <div class="code-label">Access Code</div>
+          <div class="code-display">
+            <span class="code">{{ pass.code }}</span>
+            <button class="btn-copy" (click)="copyToClipboard(pass.code)" title="Copy to clipboard">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="pass-details">
+          <div class="detail-item">
+            <span class="detail-label">Created</span>
+            <span class="detail-value">{{ formatDate(pass.createdAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Expires</span>
+            <span class="detail-value">{{ formatDate(pass.expiresAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Used</span>
+            <span class="detail-value">{{ pass.usedCount }} times</span>
+          </div>
+        </div>
+
+        <div class="pass-actions" *ngIf="confirmingRevoke !== pass.id">
+          <button class="btn-revoke" (click)="confirmRevoke(pass.id)">
+            Revoke Pass
+          </button>
+        </div>
+
+        <div class="confirm-revoke" *ngIf="confirmingRevoke === pass.id">
+          <p>Are you sure you want to revoke this pass?</p>
+          <div class="confirm-actions">
+            <button class="btn-confirm-yes" (click)="revokePass(pass.id)">Yes, Revoke</button>
+            <button class="btn-confirm-no" (click)="cancelRevoke()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

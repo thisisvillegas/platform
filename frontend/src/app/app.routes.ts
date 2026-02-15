@@ -61,6 +61,11 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
     },
     {
+        path: 'pass-manager',
+        loadComponent: () => import('./pages/dashboard/pass-manager/pass-manager.component').then(m => m.PassManagerComponent),
+        canActivate: [AuthGuard]
+    },
+    {
         path: '**',
         redirectTo: '/login'
     }
