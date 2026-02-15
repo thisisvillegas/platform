@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import Pass from '../models/Pass';
 
 export interface GuestPayload {
   role: 'guest';
@@ -18,7 +19,7 @@ declare global {
   }
 }
 
-export const guestJwtCheck = (req: Request, res: Response, next: NextFunction) => {
+export const guestJwtCheck = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -43,6 +44,29 @@ export const guestJwtCheck = (req: Request, res: Response, next: NextFunction) =
       return res.status(403).json({
         error: 'Forbidden',
         message: 'Invalid token role'
+      });
+    }
+
+    // Verify the pass is still active (not revoked or expired)
+    const pass = await Pass.findOne({ code: decoded.passCode });
+    if (!pass) {
+      return res.status(401).json({
+        error: 'Pass not found',
+        message: 'The access code associated with this token no longer exists'
+      });
+    }
+
+    if (pass.revokedAt) {
+      return res.status(403).json({
+        error: 'Pass revoked',
+        message: 'This access code has been revoked'
+      });
+    }
+
+    if (pass.expiresAt < new Date()) {
+      return res.status(403).json({
+        error: 'Pass expired',
+        message: 'This access code has expired'
       });
     }
 

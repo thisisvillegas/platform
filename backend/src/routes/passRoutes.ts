@@ -28,15 +28,22 @@ router.post('/', jwtCheck, async (req: Request, res: Response) => {
   try {
     const { label, expiresInDays } = req.body;
 
-    if (!label || !expiresInDays) {
+    if (!label || expiresInDays === undefined || expiresInDays === null) {
       return res.status(400).json({
         error: 'Missing required fields: label, expiresInDays'
       });
     }
 
+    const days = Number(expiresInDays);
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+      return res.status(400).json({
+        error: 'expiresInDays must be an integer between 1 and 365'
+      });
+    }
+
     const code = await generateUniqueCode();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + parseInt(expiresInDays));
+    expiresAt.setDate(expiresAt.getDate() + days);
 
     const pass = new Pass({
       code,

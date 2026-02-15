@@ -45,8 +45,7 @@ const GuestSchema: Schema = new Schema({
 // Index for pass code lookups
 GuestSchema.index({ passCode: 1 });
 
-// Index for session token lookups
-GuestSchema.index({ sessionToken: 1 });
+// Note: sessionToken already has unique: true in schema — no duplicate index needed.
 
 // Compound index for expiry cleanup
 GuestSchema.index({ expiresAt: 1, createdAt: 1 });

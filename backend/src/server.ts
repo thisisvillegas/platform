@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/node";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { lambdaService } from "./lambdaService";
+import rateLimit from "express-rate-limit";
 import { databaseService } from "./database";
 import { jwtCheck } from "./middleware/auth";
 import brainDumpRoutes from "./routes/brainDumpRoutes";
@@ -16,13 +16,51 @@ import serverRoutes from "./routes/serverRoutes";
 import passRoutes from "./routes/passRoutes";
 import guestRoutes from "./routes/guestRoutes";
 import worldRoutes from "./routes/worldRoutes";
+import weatherRoutes from "./routes/weatherRoutes";
+import preferencesRoutes from "./routes/preferencesRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middleware: CORS restricted to known origins
+const allowedOrigins = [
+    'https://platform.thisisvillegas.com',
+    'https://api-pi.thisisvillegas.com',
+    ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:4200', 'http://localhost:3000'] : [])
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (server-to-server, curl, health checks)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// Middleware: JSON body parser with explicit size limit
+app.use(express.json({ limit: '1mb' }));
+
+// Rate limiter for public pass validation endpoint
+const passValidateRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20,                   // 20 attempts per window per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many validation attempts. Try again later.' }
+});
+
+// Rate limiter for server stats (prevent polling abuse)
+const statsRateLimit = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 60,             // ~1 req/sec (overlay polls every 2s = 30/min)
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests' }
+});
 
 // Connect to MongoDB (native driver for legacy collections)
 databaseService.connect().catch(console.error);
@@ -40,13 +78,14 @@ app.get("/health", (req: Request, res: Response) => {
     res.json({ status: "ok", timestamp: new Date().toISOString(), version: "v1.0.42" });
 });
 
-// Server stats (no auth required - internal only)
-app.use("/api/server", serverRoutes);
+// Server stats (rate-limited, no auth — used by frontend overlay)
+app.use("/api/server", statsRateLimit, serverRoutes);
 
 // World theme (GET is public, PUT is Auth0 protected)
 app.use("/api/world", worldRoutes);
 
-// Pass validation is public, CRUD operations are Auth0 protected
+// Pass validation is public (rate-limited), CRUD operations are Auth0 protected
+app.use("/api/passes/validate", passValidateRateLimit);
 app.use("/api/passes", passRoutes);
 
 // Guest account routes (guest JWT required)
@@ -58,165 +97,11 @@ app.use("/api", jwtCheck);
 // Brain Dump routes
 app.use("/api/brain-dump", brainDumpRoutes);
 
-app.get("/api/test-error", (req: Request, res: Response) => {
-    throw new Error("This is a test error for Sentry!");
-});
+// Weather endpoint (Auth0 protected — sits after jwtCheck)
+app.use("/api/weather", weatherRoutes);
 
-// ============================================++
-// RACE ENDPOINTS
-// ============================================
-
-// Get upcoming races for the next 2 weeks (MotoGP + F1)
-app.get("/api/races/upcoming", async (req: Request, res: Response) => {
-    try {
-        const mockRaces = {
-            motogp: [
-                {
-                    name: "Mock MotoGP Race",
-                    date: "2024-12-01",
-                    location: "Mock Circuit",
-                    country: "Spain"
-                }
-            ],
-            f1: [
-                {
-                    name: "Mock F1 Grand Prix",
-                    date: "2024-12-05",
-                    location: "Mock Street Circuit",
-                    country: "Monaco"
-                }
-            ]
-        };
-
-        res.json(mockRaces);
-    } catch (error) {
-        console.error("Error fetching races:", error);
-        res.status(500).json({ error: "Failed to fetch race data" });
-    }
-});
-
-// ============================================
-// WEATHER ENDPOINT
-// ============================================
-
-// Get weather for user's location
-app.get("/api/weather", async (req: Request, res: Response) => {
-    try {
-        const { lat, lon, city, units } = req.query;
-
-        const weatherData = await lambdaService.getWeather({
-            lat: lat as string,
-            lon: lon as string,
-            city: city as string,
-            units: (units as "metric" | "imperial") || "imperial"
-        });
-
-        res.json(weatherData);
-    } catch (error) {
-        console.error("Error fetching weather:", error);
-        res.status(500).json({ error: "Failed to fetch weather data" });
-    }
-});
-
-// ============================================
-// USER PREFERENCES ENDPOINTS
-// ============================================
-
-app.get("/api/preferences", async (req: Request, res: Response) => {
-    try {
-        const userId = req.auth?.payload.sub;
-
-        if (!userId) {
-            return res.status(401).json({ error: "User ID not found in token" });
-        }
-
-        const preferences = await databaseService.getUserPreferences(userId);
-
-        if (!preferences) {
-            return res.json({
-                favoriteTeams: [],
-                notifications: true,
-                theme: "dark",
-                measurementUnits: "imperial"
-            });
-        }
-
-        res.json(preferences);
-    } catch (error) {
-        console.error("Error fetching preferences:", error);
-        res.status(500).json({ error: "Failed to fetch preferences" });
-    }
-});
-
-app.put("/api/preferences", async (req: Request, res: Response) => {
-    try {
-        const userId = req.auth?.payload.sub;
-
-        if (!userId) {
-            return res.status(401).json({ error: "User ID not found in token" });
-        }
-
-        const { favoriteTeams, notifications, theme, measurementUnits } = req.body;
-
-        const preferences = await databaseService.updateUserPreferences(userId, {
-            favoriteTeams,
-            notifications,
-            theme,
-            measurementUnits,
-        });
-
-        res.json({ message: "Preferences updated successfully", preferences });
-    } catch (error) {
-        console.error("Error updating preferences:", error);
-        res.status(500).json({ error: "Failed to update preferences" });
-    }
-});
-
-// ============================================
-// FILE UPLOAD ENDPOINTS
-// ============================================
-
-app.get("/api/files", async (req: Request, res: Response) => {
-    try {
-        const mockFiles = [
-            {
-                id: "1",
-                filename: "example.pdf",
-                uploadDate: "2024-11-20",
-                size: 1024000,
-                url: "https://mock-s3-url.com/file.pdf"
-            }
-        ];
-
-        res.json(mockFiles);
-    } catch (error) {
-        console.error("Error fetching files:", error);
-        res.status(500).json({ error: "Failed to fetch files" });
-    }
-});
-
-app.post("/api/files/upload", async (req: Request, res: Response) => {
-    try {
-        res.json({
-            message: "File uploaded successfully",
-            fileId: "mock-file-id",
-            url: "https://mock-s3-url.com/uploaded-file.pdf"
-        });
-    } catch (error) {
-        console.error("Error uploading file:", error);
-        res.status(500).json({ error: "Failed to upload file" });
-    }
-});
-
-app.delete("/api/files/:fileId", async (req: Request, res: Response) => {
-    try {
-        const { fileId } = req.params;
-        res.json({ message: "File deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting file:", error);
-        res.status(500).json({ error: "Failed to delete file" });
-    }
-});
+// User preferences (Auth0 protected — sits after jwtCheck)
+app.use("/api/preferences", preferencesRoutes);
 
 // ============================================
 // ERROR HANDLING
@@ -234,12 +119,40 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // ============================================
-// START SERVER
+// START SERVER + GRACEFUL SHUTDOWN
 // ============================================
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Health check available at  https://api.thisisvillegas.com/health`);
 });
+
+async function gracefulShutdown(signal: string): Promise<void> {
+    console.log(`\n${signal} received. Starting graceful shutdown...`);
+
+    server.close(() => {
+        console.log('HTTP server closed');
+    });
+
+    try {
+        await mongoose.disconnect();
+        console.log('Mongoose disconnected');
+    } catch (err) {
+        console.error('Error disconnecting Mongoose:', err);
+    }
+
+    try {
+        await databaseService.disconnect();
+        console.log('Native MongoDB disconnected');
+    } catch (err) {
+        console.error('Error disconnecting native MongoDB:', err);
+    }
+
+    console.log('Graceful shutdown complete');
+    process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;

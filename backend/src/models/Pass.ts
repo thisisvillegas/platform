@@ -38,7 +38,7 @@ const PassSchema: Schema = new Schema({
   }
 });
 
-// Index for quick code lookups
-PassSchema.index({ code: 1 });
+// Note: `code` already has unique: true in schema, which creates an index automatically.
+// No need for a duplicate .index({ code: 1 }) call.
 
 export default mongoose.model<IPass>('Pass', PassSchema);
