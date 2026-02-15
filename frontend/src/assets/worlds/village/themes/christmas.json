@@ -1,0 +1,30 @@
+{
+  "id": "christmas",
+  "name": "Christmas",
+  "palette": {
+    "overlay": {
+      "color": "#e6f7ff",
+      "alpha": 0.1
+    }
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0,
+    "radius": 0
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "particles": {
+    "type": "snowflakes",
+    "density": 20,
+    "speed": 30,
+    "color": "#ffffff"
+  },
+  "decorationLayers": ["christmas-decorations"],
+  "audio": {
+    "ambient": "assets/audio/christmas-ambient.mp3",
+    "music": "assets/audio/christmas-music.mp3"
+  }
+}

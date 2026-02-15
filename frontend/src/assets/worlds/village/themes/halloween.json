@@ -1,0 +1,30 @@
+{
+  "id": "halloween",
+  "name": "Halloween",
+  "palette": {
+    "overlay": {
+      "color": "#4b0082",
+      "alpha": 0.2
+    }
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0,
+    "radius": 0
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "particles": {
+    "type": "fog",
+    "density": 5,
+    "speed": 10,
+    "color": "#cccccc"
+  },
+  "decorationLayers": ["halloween-decorations"],
+  "audio": {
+    "ambient": "assets/audio/halloween-ambient.mp3",
+    "music": "assets/audio/halloween-music.mp3"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "valentine",
+  "name": "Valentine's Day",
+  "palette": {
+    "overlay": {
+      "color": "#ff69b4",
+      "alpha": 0.15
+    }
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0,
+    "radius": 0
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "particles": {
+    "type": "hearts",
+    "density": 10,
+    "speed": 20,
+    "color": "#ff1493"
+  },
+  "decorationLayers": ["valentine-decorations"],
+  "audio": {
+    "ambient": "assets/audio/valentine-ambient.mp3",
+    "music": "assets/audio/valentine-music.mp3"
+  }
+}

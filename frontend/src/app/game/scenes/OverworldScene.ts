@@ -242,8 +242,11 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private toggleTheme(): void {
+    const themes = ['default', 'night', 'valentine', 'christmas', 'autumn', 'halloween'];
     const currentTheme = this.themeEngine.getCurrentTheme();
-    const newThemeId = currentTheme?.id === 'default' ? 'night' : 'default';
+    const currentIndex = themes.indexOf(currentTheme?.id ?? 'default');
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const newThemeId = themes[nextIndex];
 
     this.themeEngine.switchTheme(newThemeId);
     this.updateThemeButtonText(newThemeId);
@@ -253,7 +256,15 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private updateThemeButtonText(themeId: string): void {
-    this.themeToggleButton.setText(themeId === 'default' ? '🌙' : '☀️');
+    const icons: Record<string, string> = {
+      'default': '☀️',
+      'night': '🌙',
+      'valentine': '💝',
+      'christmas': '🎄',
+      'autumn': '🍂',
+      'halloween': '🎃'
+    };
+    this.themeToggleButton.setText(icons[themeId] ?? '☀️');
   }
 
   override update(): void {

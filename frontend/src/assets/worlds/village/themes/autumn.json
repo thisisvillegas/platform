@@ -1,0 +1,30 @@
+{
+  "id": "autumn",
+  "name": "Autumn",
+  "palette": {
+    "overlay": {
+      "color": "#ff8c00",
+      "alpha": 0.1
+    }
+  },
+  "lights": {
+    "lampTiles": [],
+    "intensity": 0,
+    "radius": 0
+  },
+  "windowTiles": {
+    "day": [],
+    "night": []
+  },
+  "particles": {
+    "type": "leaves",
+    "density": 15,
+    "speed": 25,
+    "color": "#ff4500"
+  },
+  "decorationLayers": ["autumn-decorations"],
+  "audio": {
+    "ambient": "assets/audio/autumn-ambient.mp3",
+    "music": "assets/audio/autumn-music.mp3"
+  }
+}
