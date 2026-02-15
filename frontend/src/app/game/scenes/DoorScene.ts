@@ -53,10 +53,9 @@ export class DoorScene extends Phaser.Scene {
       {
         fontSize: '28px',
         color: '#00ffff',
-        fontFamily: 'monospace',
-        letterSpacing: '8px'
+        fontFamily: 'monospace'
       }
-    ).setOrigin(0.5);
+    ).setOrigin(0.5).setLetterSpacing(8);
 
     // Instructions
     this.add.text(

@@ -18,7 +18,7 @@ export class CinematicScene extends Phaser.Scene {
 
   preload(): void {
     // Create a simple particle texture programmatically
-    const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    const graphics = this.add.graphics();
     graphics.fillStyle(0xffffff);
     graphics.fillCircle(4, 4, 4);
     graphics.generateTexture('particle', 8, 8);
