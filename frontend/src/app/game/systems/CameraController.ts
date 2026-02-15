@@ -2,32 +2,24 @@ import * as Phaser from 'phaser';
 
 /**
  * Manages the main camera: smooth follow, map-bound clamping, and zoom effects.
- *
- * Constructed with scene, camera, and target sprite. Starts following immediately.
  */
 export class CameraController {
   private scene: Phaser.Scene;
   private camera: Phaser.Cameras.Scene2D.Camera;
 
-  constructor(
-    scene: Phaser.Scene,
-    camera: Phaser.Cameras.Scene2D.Camera,
-    target: Phaser.Physics.Arcade.Sprite
-  ) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.camera = camera;
+    this.camera = scene.cameras.main;
+  }
 
-    // Start smooth follow immediately on construction
+  /** Start following a sprite with smooth lerp, clamped to map bounds. */
+  startFollow(target: Phaser.Physics.Arcade.Sprite, mapWidth: number, mapHeight: number): void {
+    this.camera.setBounds(0, 0, mapWidth, mapHeight);
     this.camera.startFollow(target, true, 0.1, 0.1);
   }
 
-  /** Clamp camera to the tilemap bounds. */
-  setBounds(map: Phaser.Tilemaps.Tilemap): void {
-    this.camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-  }
-
   /** Cinematic arrival: starts at 0.5x, tweens to 2x over 2 seconds. */
-  arrivalZoom(): void {
+  playArrivalZoom(): void {
     this.camera.setZoom(0.5);
 
     this.scene.tweens.add({

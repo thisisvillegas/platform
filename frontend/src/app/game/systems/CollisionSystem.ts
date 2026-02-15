@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 
 /**
  * Sets up Arcade physics collisions between the player and tilemap layers.
- * Derives world bounds from the collision layer's parent tilemap.
+ * Also constrains the player to map world bounds.
  */
 export class CollisionSystem {
   private scene: Phaser.Scene;
@@ -13,20 +13,18 @@ export class CollisionSystem {
   }
 
   /**
-   * Enable collision between the player and a tilemap collision layer.
-   * Automatically sets physics world bounds from the layer's tilemap.
+   * Enable collision between the player and a collision tilemap layer.
+   * Sets world bounds and marks all non-empty tiles as solid.
    */
-  addCollision(
+  create(
     player: Phaser.Physics.Arcade.Sprite,
-    collisionLayer: Phaser.Tilemaps.TilemapLayer
+    collisionLayer: Phaser.Tilemaps.TilemapLayer,
+    mapWidth: number,
+    mapHeight: number
   ): void {
-    const map = collisionLayer.tilemap;
-
-    // Set physics world bounds from the tilemap dimensions
-    this.scene.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.scene.physics.world.setBounds(0, 0, mapWidth, mapHeight);
     player.setCollideWorldBounds(true);
 
-    // Mark all non-empty tiles as solid
     collisionLayer.setCollisionByExclusion([-1, 0]);
     collisionLayer.setVisible(false);
 

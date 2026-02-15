@@ -1,31 +1,44 @@
 import * as Phaser from 'phaser';
 
 /**
- * Manages player input, movement, and walk animations.
+ * Manages player sprite, input handling, and walk animations.
  * Desktop-only: WASD + arrow keys, no touch/joystick support.
  *
- * The scene creates the sprite externally and passes it in.
+ * Lifecycle: construct → preload() → create(x, y) → update() each frame
  */
 export class PlayerController {
   private scene: Phaser.Scene;
-  private sprite: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
-  private speed: number;
 
-  constructor(scene: Phaser.Scene, sprite: Phaser.Physics.Arcade.Sprite, speed = 100) {
+  public sprite!: Phaser.Physics.Arcade.Sprite;
+  public speed: number;
+
+  constructor(scene: Phaser.Scene, speed = 100) {
     this.scene = scene;
-    this.sprite = sprite;
     this.speed = speed;
+  }
 
+  /** Queue the player spritesheet for loading. */
+  preload(): void {
+    this.scene.load.spritesheet('player', '/assets/worlds/village/sprites/player.png', {
+      frameWidth: 16,
+      frameHeight: 16
+    });
+  }
+
+  /** Create the player sprite at (x, y), set up animations and input. */
+  create(x: number, y: number): void {
+    this.sprite = this.scene.physics.add.sprite(x, y, 'player', 0);
     this.sprite.setDepth(10);
+
     this.createAnimations();
     this.setupInput();
   }
 
   /** Read input and update velocity + animation each frame. */
   update(): void {
-    if (!this.sprite.body) return;
+    if (!this.sprite?.body) return;
 
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
     const right = this.cursors.right.isDown || this.wasd.D.isDown;

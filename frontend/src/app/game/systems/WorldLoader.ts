@@ -1,56 +1,85 @@
 import * as Phaser from 'phaser';
 
 /**
- * Creates a Tiled tilemap from pre-loaded assets and returns all layers
- * as a keyed record for other systems to consume.
+ * Loads a Tiled JSON tilemap, creates all layers, and exposes them for other systems.
  *
- * The scene handles preload() itself — this class only does the create step.
+ * Lifecycle: construct → preload() → create() → read public layers/helpers
  */
 export class WorldLoader {
   private scene: Phaser.Scene;
+
+  public tilemap!: Phaser.Tilemaps.Tilemap;
+  public tileset!: Phaser.Tilemaps.Tileset;
+  public groundLayer!: Phaser.Tilemaps.TilemapLayer;
+  public buildingsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  public collisionLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  public abovePlayerLayer: Phaser.Tilemaps.TilemapLayer | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
-  /**
-   * Build the tilemap and create all tile layers.
-   * Assets must already be loaded by the scene's preload().
-   *
-   * @returns map and layers keyed by Tiled layer name
-   */
-  createMap(
-    mapKey: string,
-    tilesetKey: string
-  ): { map: Phaser.Tilemaps.Tilemap; layers: Record<string, Phaser.Tilemaps.TilemapLayer> } {
-    const map = this.scene.make.tilemap({ key: mapKey });
+  /** Queue tilemap JSON and tileset image for loading. */
+  preload(): void {
+    this.scene.load.tilemapTiledJSON('village-map', '/assets/worlds/village/maps/village.json');
+    this.scene.load.image('village-tileset', '/assets/worlds/village/tilesets/village-tileset.png');
+  }
 
-    const tileset = map.addTilesetImage('village-tileset', tilesetKey);
+  /** Build tilemap from loaded assets and create all tile layers. */
+  create(): void {
+    this.tilemap = this.scene.make.tilemap({ key: 'village-map' });
+
+    const tileset = this.tilemap.addTilesetImage('village-tileset', 'village-tileset');
     if (!tileset) {
-      throw new Error('WorldLoader: failed to attach tileset "' + tilesetKey + '"');
+      console.error('WorldLoader: failed to attach tileset image');
+      return;
     }
-
-    const layers: Record<string, Phaser.Tilemaps.TilemapLayer> = {};
+    this.tileset = tileset;
 
     // Depth ordering: ground=0, collision=1 (invisible), buildings=5, above-player=20
-    const layerConfig: { name: string; depth: number; visible?: boolean }[] = [
-      { name: 'ground', depth: 0 },
-      { name: 'buildings', depth: 5 },
-      { name: 'collision', depth: 1, visible: false },
-      { name: 'above-player', depth: 20 }
-    ];
+    this.groundLayer = this.tilemap.createLayer('ground', tileset)!;
+    this.groundLayer.setDepth(0);
 
-    for (const cfg of layerConfig) {
-      const layer = map.createLayer(cfg.name, tileset);
-      if (layer) {
-        layer.setDepth(cfg.depth);
-        if (cfg.visible === false) {
-          layer.setVisible(false);
-        }
-        layers[cfg.name] = layer;
-      }
+    this.buildingsLayer = this.tilemap.createLayer('buildings', tileset);
+    if (this.buildingsLayer) this.buildingsLayer.setDepth(5);
+
+    this.collisionLayer = this.tilemap.createLayer('collision', tileset);
+    if (this.collisionLayer) {
+      this.collisionLayer.setDepth(1);
+      this.collisionLayer.setVisible(false);
     }
 
-    return { map, layers };
+    this.abovePlayerLayer = this.tilemap.createLayer('above-player', tileset);
+    if (this.abovePlayerLayer) this.abovePlayerLayer.setDepth(20);
+  }
+
+  /** Find the player-spawn point from the objects layer. Falls back to map center. */
+  getSpawnPoint(): { x: number; y: number } {
+    const objectLayer = this.tilemap.getObjectLayer('objects');
+    if (objectLayer) {
+      const spawn = objectLayer.objects.find(obj => obj.name === 'player-spawn');
+      if (spawn?.x != null && spawn?.y != null) {
+        return { x: spawn.x, y: spawn.y };
+      }
+    }
+    return {
+      x: this.tilemap.widthInPixels / 2,
+      y: this.tilemap.heightInPixels / 2
+    };
+  }
+
+  /** Find door-zone objects for scene transitions. */
+  getDoorZones(): Phaser.Types.Tilemaps.TiledObject[] {
+    const objectLayer = this.tilemap.getObjectLayer('objects');
+    if (!objectLayer) return [];
+    return objectLayer.objects.filter(obj => obj.type === 'door');
+  }
+
+  /** Map dimensions in pixels. */
+  getMapBounds(): { width: number; height: number } {
+    return {
+      width: this.tilemap.widthInPixels,
+      height: this.tilemap.heightInPixels
+    };
   }
 }
