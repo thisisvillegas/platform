@@ -12,6 +12,7 @@ import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/Dialog
 import { DialogueChoice } from '../ui/DialogueBox';
 import { WorldPackBuilding } from '../types/WorldPack';
 import { ThemeEngine } from '../systems/ThemeEngine';
+import { SecretsManager, Collectible } from '../systems/SecretsManager';
 
 interface ManifestJSON {
   buildings?: WorldPackBuilding[];
@@ -28,9 +29,11 @@ export class OverworldScene extends Phaser.Scene {
   private dialogueBox!: DialogueBox;
   private audioManager!: AudioManager;
   private themeEngine!: ThemeEngine;
+  private secretsManager!: SecretsManager;
   private themeToggleButton!: Phaser.GameObjects.Text;
   private spawnX?: number;
   private spawnY?: number;
+  private codeModal: Phaser.GameObjects.Container | null = null;
 
   // Public tilemap for ThemeEngine decoration layer access
   public tilemap!: Phaser.Tilemaps.Tilemap;
@@ -185,6 +188,10 @@ export class OverworldScene extends Phaser.Scene {
     this.audioManager = new AudioManager(this);
     this.audioManager.playMusic('village-bgm');
 
+    // SecretsManager: code fragment collectibles
+    this.secretsManager = new SecretsManager(this);
+    this.initializeSecrets();
+
     // Theme Engine: auto-detect day/night from local time
     this.themeEngine = new ThemeEngine(this, '/assets/worlds/village');
     this.initializeTheme();
@@ -267,10 +274,113 @@ export class OverworldScene extends Phaser.Scene {
     this.themeToggleButton.setText(icons[themeId] ?? '☀️');
   }
 
+  private async initializeSecrets(): Promise<void> {
+    await this.secretsManager.loadCollectibles();
+    this.secretsManager.renderCollectibles();
+  }
+
+  private showCodeModal(collectible: Collectible): void {
+    if (this.codeModal) {
+      this.codeModal.destroy();
+    }
+
+    const camera = this.cameras.main;
+    const width = camera.width;
+    const height = camera.height;
+
+    // Create modal container
+    this.codeModal = this.add.container(width / 2, height / 2);
+    this.codeModal.setScrollFactor(0);
+    this.codeModal.setDepth(2000);
+
+    // Backdrop
+    const backdrop = this.add.rectangle(0, 0, width, height, 0x000000, 0.85);
+    backdrop.setOrigin(0.5);
+
+    // Modal box
+    const boxWidth = Math.min(600, width - 40);
+    const boxHeight = Math.min(500, height - 40);
+    const modalBg = this.add.rectangle(0, 0, boxWidth, boxHeight, 0x1a1a2e);
+    modalBg.setStrokeStyle(3, 0x00ffff);
+
+    // Title
+    const title = this.add.text(0, -boxHeight / 2 + 30, collectible.title, {
+      fontSize: '18px',
+      color: '#00ffff',
+      fontFamily: 'monospace',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Language label
+    const langLabel = this.add.text(0, -boxHeight / 2 + 60, `Language: ${collectible.language}`, {
+      fontSize: '12px',
+      color: '#888888',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
+
+    // Code snippet box
+    const codeText = this.add.text(0, -boxHeight / 2 + 100, collectible.codeSnippet, {
+      fontSize: '11px',
+      color: '#00ff00',
+      fontFamily: 'monospace',
+      backgroundColor: '#0a0a0a',
+      padding: { x: 10, y: 10 },
+      wordWrap: { width: boxWidth - 60 }
+    }).setOrigin(0.5, 0);
+
+    // Explanation
+    const explanation = this.add.text(0, boxHeight / 2 - 80, collectible.explanation, {
+      fontSize: '13px',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      wordWrap: { width: boxWidth - 40 },
+      align: 'center'
+    }).setOrigin(0.5);
+
+    // Close button
+    const closeBtn = this.add.rectangle(0, boxHeight / 2 - 30, 120, 35, 0x00ffff, 0.3);
+    closeBtn.setStrokeStyle(2, 0x00ffff);
+    const closeBtnText = this.add.text(0, boxHeight / 2 - 30, 'CLOSE', {
+      fontSize: '14px',
+      color: '#00ffff',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
+
+    closeBtn.setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerover', () => closeBtn.setFillStyle(0x00ffff, 0.5));
+    closeBtn.on('pointerout', () => closeBtn.setFillStyle(0x00ffff, 0.3));
+    closeBtn.on('pointerdown', () => this.closeCodeModal());
+
+    // Add all elements
+    this.codeModal.add([backdrop, modalBg, title, langLabel, codeText, explanation, closeBtn, closeBtnText]);
+
+    // Close on ESC or SPACE key
+    const escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    const spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    const closeHandler = () => {
+      this.closeCodeModal();
+      escKey.off('down', closeHandler);
+      spaceKey.off('down', closeHandler);
+    };
+
+    escKey.once('down', closeHandler);
+    spaceKey.once('down', closeHandler);
+  }
+
+  private closeCodeModal(): void {
+    if (this.codeModal) {
+      this.codeModal.destroy();
+      this.codeModal = null;
+    }
+  }
+
   override update(): void {
-    // Handle dialogue input when active
-    if (this.dialogueActive) {
-      this.dialogueBox.update();
+    // Handle dialogue input when active or modal is open
+    if (this.dialogueActive || this.codeModal) {
+      if (this.dialogueActive) {
+        this.dialogueBox.update();
+      }
       return;
     }
 
@@ -280,6 +390,14 @@ export class OverworldScene extends Phaser.Scene {
 
     const player = this.playerController.sprite;
     this.npcManager.update(player.x, player.y);
+
+    // Collectible pickup check
+    const pickedCollectible = this.secretsManager.checkPickup(player.x, player.y);
+    if (pickedCollectible) {
+      this.playerController.sprite.setVelocity(0); // Stop player movement
+      this.showCodeModal(pickedCollectible);
+      return; // Don't check NPC interaction when picking up collectible
+    }
 
     // NPC proximity check
     const closestNPC = this.npcManager.getClosestNPC(player.x, player.y);
