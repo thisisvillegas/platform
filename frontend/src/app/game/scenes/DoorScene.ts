@@ -2,7 +2,11 @@ import * as Phaser from 'phaser';
 import { environment } from '../../../environments/environment';
 
 export class DoorScene extends Phaser.Scene {
+  private background!: Phaser.GameObjects.Rectangle;
   private doorSprite!: Phaser.GameObjects.Rectangle;
+  private metalBands: Phaser.GameObjects.Rectangle[] = [];
+  private keypadBg!: Phaser.GameObjects.Rectangle;
+  private instructionsText!: Phaser.GameObjects.Text;
   private codeInput: string = '';
   private codeDisplay!: Phaser.GameObjects.Text;
   private errorText!: Phaser.GameObjects.Text;
@@ -25,7 +29,7 @@ export class DoorScene extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // Dark background
-    this.add.rectangle(0, 0, width, height, 0x0a0a1a).setOrigin(0, 0);
+    this.background = this.add.rectangle(0, 0, width, height, 0x0a0a1a).setOrigin(0, 0);
 
     // Speakeasy door (simplified as a large rectangle)
     this.doorSprite = this.add.rectangle(
@@ -38,13 +42,15 @@ export class DoorScene extends Phaser.Scene {
     this.doorSprite.setStrokeStyle(4, 0x2a1810);
 
     // Door details (metal bands)
-    this.add.rectangle(width / 2, height / 2 - 150, 280, 8, 0x4a4a4a);
-    this.add.rectangle(width / 2, height / 2, 280, 8, 0x4a4a4a);
-    this.add.rectangle(width / 2, height / 2 + 150, 280, 8, 0x4a4a4a);
+    this.metalBands = [
+      this.add.rectangle(width / 2, height / 2 - 150, 280, 8, 0x4a4a4a),
+      this.add.rectangle(width / 2, height / 2, 280, 8, 0x4a4a4a),
+      this.add.rectangle(width / 2, height / 2 + 150, 280, 8, 0x4a4a4a)
+    ];
 
     // Keypad background
-    const keypadBg = this.add.rectangle(width / 2, height / 2 + 50, 260, 120, 0x1a1a2e);
-    keypadBg.setStrokeStyle(2, 0x00ffff);
+    this.keypadBg = this.add.rectangle(width / 2, height / 2 + 50, 260, 120, 0x1a1a2e);
+    this.keypadBg.setStrokeStyle(2, 0x00ffff);
 
     // Code display (masked)
     this.codeDisplay = this.add.text(
@@ -58,13 +64,13 @@ export class DoorScene extends Phaser.Scene {
       }
     ).setOrigin(0.5).setLetterSpacing(8);
 
-    // Instructions
-    this.add.text(
+    // Instructions — Fix #7: indicate expected code length
+    this.instructionsText = this.add.text(
       width / 2,
       height / 2 - 20,
-      'ENTER ACCESS CODE',
+      'ENTER YOUR 8-CHARACTER CODE',
       {
-        fontSize: '16px',
+        fontSize: '14px',
         color: '#00ffff',
         fontFamily: 'monospace'
       }
@@ -143,6 +149,7 @@ export class DoorScene extends Phaser.Scene {
     text.on('pointerdown', () => this.showHelpModal());
   }
 
+  // Fix #3: Skip link — larger font, brighter color
   private createSkipLink(): void {
     const width = this.cameras.main.width;
 
@@ -151,21 +158,27 @@ export class DoorScene extends Phaser.Scene {
       20,
       'Skip to projects →',
       {
-        fontSize: '14px',
-        color: '#888888',
+        fontSize: '16px',
+        color: '#bbbbbb',
         fontFamily: 'monospace'
       }
     ).setOrigin(1, 0);
 
     this.skipLink.setInteractive({ useHandCursor: true });
     this.skipLink.on('pointerover', () => this.skipLink.setColor('#00ffff'));
-    this.skipLink.on('pointerout', () => this.skipLink.setColor('#888888'));
+    this.skipLink.on('pointerout', () => this.skipLink.setColor('#bbbbbb'));
     this.skipLink.on('pointerdown', () => this.navigateToProjects());
   }
 
+  // Fix #6: Clear error on next keypress instead of auto-clearing on timer
   private enableKeyboardInput(): void {
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
       if (this.helpModal) return; // Ignore input when modal is open
+
+      // Clear error on any keypress
+      if (this.errorText.text) {
+        this.errorText.setText('');
+      }
 
       if (event.key === 'Backspace') {
         this.codeInput = this.codeInput.slice(0, -1);
@@ -233,8 +246,14 @@ export class DoorScene extends Phaser.Scene {
   private onValidCode(): void {
     this.errorText.setText('');
 
-    // Play door opening sound (if available)
-    // this.sound.play('door-open');
+    // Fix #5: Play door opening sound with graceful degradation
+    try {
+      if (this.cache.audio.exists('door-open')) {
+        this.sound.play('door-open');
+      }
+    } catch (_) {
+      // Audio not available, continue silently
+    }
 
     // Door swing animation
     this.tweens.add({
@@ -253,21 +272,33 @@ export class DoorScene extends Phaser.Scene {
     fadeOut.setAlpha(0);
     fadeOut.setDepth(1000);
 
-    this.add.text(width / 2, height / 2, 'Welcome...', {
+    // Fix #2: Welcome text — tween alpha from 0 to 1
+    const welcomeText = this.add.text(width / 2, height / 2, 'Welcome...', {
       fontSize: '32px',
       color: '#00ffff',
       fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(1001).setAlpha(0);
 
     this.time.delayedCall(800, () => {
+      // Fade in welcome text over the darkening screen
+      this.tweens.add({
+        targets: welcomeText,
+        alpha: 1,
+        duration: 800,
+        ease: 'Power2'
+      });
+
+      // Fade screen to black
       this.tweens.add({
         targets: fadeOut,
         alpha: 1,
         duration: 1000,
         ease: 'Power2',
         onComplete: () => {
-          // Transition to village/overworld scene
-          this.scene.start('LoadingScene');
+          // Let the welcome text linger briefly before transitioning
+          this.time.delayedCall(800, () => {
+            this.scene.start('LoadingScene');
+          });
         }
       });
     });
@@ -287,15 +318,16 @@ export class DoorScene extends Phaser.Scene {
       ease: 'Power1'
     });
 
-    // Play denial sound (if available)
-    // this.sound.play('door-deny');
+    // Fix #5: Play denial sound with graceful degradation
+    try {
+      if (this.cache.audio.exists('door-deny')) {
+        this.sound.play('door-deny');
+      }
+    } catch (_) {
+      // Audio not available, continue silently
+    }
 
-    // Clear input after 2 seconds
-    this.time.delayedCall(2000, () => {
-      this.codeInput = '';
-      this.updateCodeDisplay();
-      this.errorText.setText('');
-    });
+    // Fix #6: Don't auto-clear input or error — error clears on next keypress
   }
 
   private showError(message: string): void {
@@ -332,6 +364,7 @@ export class DoorScene extends Phaser.Scene {
     updateCooldown();
   }
 
+  // Fix #4: Modal with clickable contact links via window.open
   private showHelpModal(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -371,20 +404,34 @@ export class DoorScene extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
-    // Contact links
+    // Contact links — clickable with window.open
     const contacts = [
-      'Email: andres@thisisvillegas.com',
-      'LinkedIn: linkedin.com/in/andresvillegas',
-      'GitHub: github.com/thisisvillegas'
+      { label: 'Email: andres@thisisvillegas.com', url: 'mailto:andres@thisisvillegas.com' },
+      { label: 'LinkedIn: linkedin.com/in/andresvillegas', url: 'https://linkedin.com/in/andresvillegas' },
+      { label: 'GitHub: github.com/thisisvillegas', url: 'https://github.com/thisisvillegas' }
     ];
 
     const contactTexts = contacts.map((contact, i) => {
-      return this.add.text(0, -20 + (i * 30), contact, {
+      const text = this.add.text(0, -20 + (i * 35), contact.label, {
         fontSize: '13px',
         color: '#00ffff',
         fontFamily: 'monospace'
       }).setOrigin(0.5);
+
+      text.setInteractive({ useHandCursor: true });
+      text.on('pointerover', () => text.setColor('#ffffff'));
+      text.on('pointerout', () => text.setColor('#00ffff'));
+      text.on('pointerdown', () => window.open(contact.url, '_blank'));
+
+      return text;
     });
+
+    // Hint text
+    const hint = this.add.text(0, 75, '(click to open)', {
+      fontSize: '11px',
+      color: '#666666',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
 
     // Close button
     const closeBtn = this.add.rectangle(0, 120, 120, 40, 0x00ffff, 0.3);
@@ -401,7 +448,7 @@ export class DoorScene extends Phaser.Scene {
     closeBtn.on('pointerdown', () => this.closeHelpModal());
 
     // Add all elements to modal
-    this.helpModal.add([backdrop, modalBg, title, desc, ...contactTexts, closeBtn, closeBtnText]);
+    this.helpModal.add([backdrop, modalBg, title, desc, ...contactTexts, hint, closeBtn, closeBtnText]);
   }
 
   private closeHelpModal(): void {
@@ -420,8 +467,64 @@ export class DoorScene extends Phaser.Scene {
     }
   }
 
+  // Fix #1: Responsive repositioning on resize (mirrors CinematicScene pattern)
   private handleResize(gameSize: Phaser.Structs.Size): void {
-    // Handle responsive repositioning if needed
+    // Guard against resize events after scene shutdown
+    if (!this.scene || !this.scene.isActive()) return;
+
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    if (this.background) {
+      this.background.setSize(width, height);
+    }
+
+    if (this.doorSprite) {
+      this.doorSprite.setPosition(width / 2, height / 2 - 50);
+    }
+
+    if (this.metalBands.length === 3) {
+      this.metalBands[0].setPosition(width / 2, height / 2 - 150);
+      this.metalBands[1].setPosition(width / 2, height / 2);
+      this.metalBands[2].setPosition(width / 2, height / 2 + 150);
+    }
+
+    if (this.keypadBg) {
+      this.keypadBg.setPosition(width / 2, height / 2 + 50);
+    }
+
+    if (this.codeDisplay) {
+      this.codeDisplay.setPosition(width / 2, height / 2 + 20);
+    }
+
+    if (this.instructionsText) {
+      this.instructionsText.setPosition(width / 2, height / 2 - 20);
+    }
+
+    if (this.errorText) {
+      this.errorText.setPosition(width / 2, height / 2 + 130);
+    }
+
+    if (this.submitButton) {
+      this.submitButton.setPosition(width / 2, height / 2 + 90);
+    }
+
+    if (this.needCodeButton) {
+      this.needCodeButton.setPosition(width / 2, height - 80);
+    }
+
+    if (this.skipLink) {
+      this.skipLink.setPosition(width - 20, 20);
+    }
+
+    if (this.cooldownText) {
+      this.cooldownText.setPosition(width / 2, height / 2 + 150);
+    }
+
+    // Close modal on resize to avoid mispositioned overlay
+    if (this.helpModal) {
+      this.closeHelpModal();
+    }
   }
 
   shutdown(): void {
