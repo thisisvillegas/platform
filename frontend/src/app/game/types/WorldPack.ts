@@ -24,6 +24,11 @@ export interface WorldPackAssets {
 export interface WorldPackBuilding {
   id: string;
   name: string;
+  type: 'app' | 'external' | 'info' | 'placeholder';
+  appRoute?: string;
+  appUrl?: string;
+  requiresAuth: boolean;
+  description: string;
   interiorMap?: string;
 }
 
