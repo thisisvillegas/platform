@@ -13,6 +13,9 @@ import { DialogueChoice } from '../ui/DialogueBox';
 import { WorldPackBuilding } from '../types/WorldPack';
 import { ThemeEngine } from '../systems/ThemeEngine';
 import { SecretsManager, Collectible } from '../systems/SecretsManager';
+import { AchievementEngine, GameState } from '../systems/AchievementEngine';
+import { AchievementToast } from '../ui/AchievementToast';
+import { CollectiblesPanel } from '../ui/CollectiblesPanel';
 
 interface ManifestJSON {
   buildings?: WorldPackBuilding[];
@@ -30,10 +33,23 @@ export class OverworldScene extends Phaser.Scene {
   private audioManager!: AudioManager;
   private themeEngine!: ThemeEngine;
   private secretsManager!: SecretsManager;
+  private achievementEngine!: AchievementEngine;
+  private achievementToast!: AchievementToast;
+  private collectiblesPanel!: CollectiblesPanel;
   private themeToggleButton!: Phaser.GameObjects.Text;
   private spawnX?: number;
   private spawnY?: number;
   private codeModal: Phaser.GameObjects.Container | null = null;
+
+  // Achievement tracking
+  private buildingsVisited = new Set<string>();
+  private npcsInteracted = new Set<string>();
+  private dialogueCountTotal = 0;
+  private timeSpentTotal = 0;
+  private sessionStartTime = 0;
+  private konamiSequence: string[] = [];
+  private konamiTarget = ['UP', 'UP', 'DOWN', 'DOWN', 'LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'B', 'A'];
+  private panelOpened = false;
 
   // Public tilemap for ThemeEngine decoration layer access
   public tilemap!: Phaser.Tilemaps.Tilemap;
@@ -146,6 +162,11 @@ export class OverworldScene extends Phaser.Scene {
           (data) => {
             const id = data['buildingId'] as string;
             const config = this.buildingConfigs.get(id);
+
+            // Track building visit
+            this.buildingsVisited.add(id);
+            this.checkAchievements();
+
             this.transition.transitionTo('InteriorScene', {
               buildingId: id,
               buildingName: config?.name ?? id,
@@ -191,6 +212,12 @@ export class OverworldScene extends Phaser.Scene {
     // SecretsManager: code fragment collectibles
     this.secretsManager = new SecretsManager(this);
     this.initializeSecrets();
+
+    // Achievement system
+    this.achievementEngine = new AchievementEngine();
+    this.achievementToast = new AchievementToast(this);
+    this.collectiblesPanel = new CollectiblesPanel(this);
+    this.initializeAchievements();
 
     // Theme Engine: auto-detect day/night from local time
     this.themeEngine = new ThemeEngine(this, '/assets/worlds/village');
@@ -375,6 +402,114 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
+  private async initializeAchievements(): Promise<void> {
+    await this.achievementEngine.loadAchievements();
+    this.sessionStartTime = Date.now();
+
+    // Listen for achievement unlocks
+    this.achievementEngine.on('achievement-unlocked', (achievement) => {
+      this.achievementToast.show(achievement);
+    });
+
+    // Tab key for collectibles panel
+    const tabKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
+    tabKey.on('down', () => {
+      this.toggleCollectiblesPanel();
+    });
+
+    // Konami code detection
+    this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
+      const key = event.key.toUpperCase();
+      const keyMap: Record<string, string> = {
+        'ARROWUP': 'UP',
+        'ARROWDOWN': 'DOWN',
+        'ARROWLEFT': 'LEFT',
+        'ARROWRIGHT': 'RIGHT'
+      };
+
+      const mappedKey = keyMap[key] || key;
+      this.konamiSequence.push(mappedKey);
+
+      // Keep only last 10 keys
+      if (this.konamiSequence.length > 10) {
+        this.konamiSequence.shift();
+      }
+
+      // Check if sequence matches
+      if (this.konamiSequence.length === 10) {
+        const match = this.konamiSequence.every((k, i) => k === this.konamiTarget[i]);
+        if (match) {
+          this.triggerKonamiEffect();
+        }
+      }
+    });
+  }
+
+  private toggleCollectiblesPanel(): void {
+    if (!this.panelOpened) {
+      this.panelOpened = true;
+      this.checkAchievements(); // Check curious achievement
+    }
+
+    const data = {
+      collectibles: {
+        found: this.secretsManager.getCollected().map(id =>
+          this.secretsManager.getCollectibleById(id)!
+        ).filter(c => c !== undefined),
+        total: this.secretsManager.getTotalCount()
+      },
+      achievements: {
+        unlocked: this.achievementEngine.getAll().filter(a =>
+          this.achievementEngine.isUnlocked(a.id)
+        ),
+        all: this.achievementEngine.getAll()
+      },
+      stats: {
+        buildingsVisited: this.buildingsVisited.size,
+        totalBuildings: 10,
+        npcsInteracted: this.npcsInteracted.size,
+        totalNPCs: 3,
+        timeSpent: this.getTimeSpent()
+      }
+    };
+
+    this.collectiblesPanel.toggle(data);
+  }
+
+  private triggerKonamiEffect(): void {
+    // Visual effect: camera shake and flash
+    this.cameras.main.shake(500, 0.01);
+    this.cameras.main.flash(500, 100, 200, 255);
+
+    // Check achievement
+    this.checkAchievements();
+  }
+
+  private getTimeSpent(): number {
+    const elapsed = Math.floor((Date.now() - this.sessionStartTime) / 1000);
+    return this.timeSpentTotal + elapsed;
+  }
+
+  private getGameState(): GameState {
+    return {
+      collectiblesFound: this.secretsManager.getCollectedCount(),
+      collectiblesTotal: this.secretsManager.getTotalCount(),
+      buildingsVisited: this.buildingsVisited,
+      npcsInteracted: this.npcsInteracted,
+      dialogueCount: this.dialogueCountTotal,
+      timeSpent: this.getTimeSpent(),
+      currentTheme: this.themeEngine.getCurrentTheme()?.id || 'default',
+      panelOpened: this.panelOpened,
+      konamiEntered: this.konamiSequence.length === 10 &&
+        this.konamiSequence.every((k, i) => k === this.konamiTarget[i])
+    };
+  }
+
+  private checkAchievements(): void {
+    const state = this.getGameState();
+    this.achievementEngine.checkAll(state);
+  }
+
   override update(): void {
     // Handle dialogue input when active or modal is open
     if (this.dialogueActive || this.codeModal) {
@@ -396,7 +531,13 @@ export class OverworldScene extends Phaser.Scene {
     if (pickedCollectible) {
       this.playerController.sprite.setVelocity(0); // Stop player movement
       this.showCodeModal(pickedCollectible);
+      this.checkAchievements(); // Check for source_diver achievement
       return; // Don't check NPC interaction when picking up collectible
+    }
+
+    // Time-based achievement check (every second)
+    if (this.time.now % 1000 < 16) { // Approximately every second
+      this.checkAchievements();
     }
 
     // NPC proximity check
@@ -425,6 +566,9 @@ export class OverworldScene extends Phaser.Scene {
       console.warn(`No dialogue data found for key: ${cacheKey}`);
       return;
     }
+
+    // Track NPC interaction
+    this.npcsInteracted.add(dialogueId);
 
     this.dialogueActive = true;
     this.playerController.sprite.setVelocity(0);
@@ -502,6 +646,14 @@ export class OverworldScene extends Phaser.Scene {
 
   private endDialogue(): void {
     this.dialogueActive = false;
+
+    // Track dialogue completion for achievements
+    if (this.currentDialogueTree) {
+      this.dialogueCountTotal++;
+      // Track which NPC was talked to (extract from dialogue tree ID if possible)
+      this.checkAchievements();
+    }
+
     this.currentDialogueTree = null;
     this.dialogueBox.hide();
   }
