@@ -111,8 +111,8 @@ export class OverworldScene extends Phaser.Scene {
     // Load interior dialogue JSON files (shared cache, available in InteriorScene)
     const dialogueBase = '/assets/worlds/village/dialogue';
     const interiorIds = [
-      'interior-tavern', 'interior-smart-home', 'interior-war-room',
-      'interior-greenhouse', 'interior-theater', 'interior-desaogo',
+      'interior-smart-home', 'interior-war-room',
+      'interior-greenhouse', 'interior-desaogo',
       'interior-gridup', 'interior-server-shack', 'interior-about-house',
       'interior-plaza'
     ];

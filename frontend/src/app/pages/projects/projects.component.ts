@@ -20,12 +20,6 @@ interface Project {
 export class ProjectsComponent {
   projects: Project[] = [
     {
-      name: 'Brain-Dump',
-      description: 'Capture thoughts, ideas, and notes in a structured knowledge base.',
-      route: '/brain-dump',
-      icon: '🧠'
-    },
-    {
       name: 'Homecontrol',
       description: 'Smart home automation and device control dashboard.',
       route: '/homecontrol',
@@ -42,12 +36,6 @@ export class ProjectsComponent {
       description: 'Tactical decision-making and strategy planning tool.',
       route: '/tactiqal',
       icon: '🎯'
-    },
-    {
-      name: 'GIF Gallery',
-      description: 'Personal collection of GIFs and animated media.',
-      externalUrl: 'https://media.thisisvillegas.com',
-      icon: '🎬'
     },
     {
       name: 'Desaogo',

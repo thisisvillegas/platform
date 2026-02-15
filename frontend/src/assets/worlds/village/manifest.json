@@ -47,14 +47,6 @@
   },
   "buildings": [
     {
-      "id": "tavern",
-      "name": "The Tavern",
-      "type": "app",
-      "appRoute": "/brain-dump",
-      "requiresAuth": true,
-      "description": "Brain Dump - AI-powered note-taking"
-    },
-    {
       "id": "smart-home",
       "name": "Smart Home HQ",
       "type": "app",
@@ -77,14 +69,6 @@
       "appRoute": "/rootine",
       "requiresAuth": true,
       "description": "Routine & habit tracking"
-    },
-    {
-      "id": "theater",
-      "name": "The Theater",
-      "type": "external",
-      "appUrl": "https://media.thisisvillegas.com",
-      "requiresAuth": false,
-      "description": "GIF Gallery"
     },
     {
       "id": "desaogo",
@@ -147,23 +131,6 @@
     }
   ],
   "interiors": {
-    "tavern": {
-      "roomWidth": 12,
-      "roomHeight": 10,
-      "floorColor": "#3d2b1f",
-      "wallColor": "#5c3a21",
-      "accentColor": "#d4a24e",
-      "npc": { "name": "Bartender", "spriteKey": "npc-bartender", "dialogueId": "interior-tavern", "tileX": 3, "tileY": 5 },
-      "portal": { "tileX": 9, "tileY": 5, "label": "Brain Dump", "glowColor": "#d4a24e" },
-      "decorations": [
-        { "type": "barrel", "tileX": 1, "tileY": 2 },
-        { "type": "barrel", "tileX": 2, "tileY": 2 },
-        { "type": "table", "tileX": 5, "tileY": 3 },
-        { "type": "table", "tileX": 5, "tileY": 7 },
-        { "type": "lamp", "tileX": 1, "tileY": 8 },
-        { "type": "lamp", "tileX": 11, "tileY": 8 }
-      ]
-    },
     "smart-home": {
       "roomWidth": 12,
       "roomHeight": 10,
@@ -213,23 +180,6 @@
         { "type": "plant", "tileX": 1, "tileY": 8 },
         { "type": "plant", "tileX": 11, "tileY": 8 },
         { "type": "table", "tileX": 7, "tileY": 7 }
-      ]
-    },
-    "theater": {
-      "roomWidth": 12,
-      "roomHeight": 10,
-      "floorColor": "#1a1028",
-      "wallColor": "#2a1840",
-      "accentColor": "#cc66ff",
-      "npc": { "name": "Projectionist", "spriteKey": "npc-projectionist", "dialogueId": "interior-theater", "tileX": 3, "tileY": 5 },
-      "portal": { "tileX": 9, "tileY": 5, "label": "GIF Gallery", "glowColor": "#cc66ff" },
-      "decorations": [
-        { "type": "monitor", "tileX": 6, "tileY": 2 },
-        { "type": "poster", "tileX": 1, "tileY": 2 },
-        { "type": "poster", "tileX": 11, "tileY": 2 },
-        { "type": "lamp", "tileX": 1, "tileY": 8 },
-        { "type": "lamp", "tileX": 11, "tileY": 8 },
-        { "type": "rug", "tileX": 6, "tileY": 5 }
       ]
     },
     "desaogo": {
