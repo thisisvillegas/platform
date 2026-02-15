@@ -6,6 +6,7 @@ import { CollisionSystem } from '../systems/CollisionSystem';
 import { InteractionSystem } from '../systems/InteractionSystem';
 import { SceneTransition } from '../systems/SceneTransition';
 import { AudioManager } from '../systems/AudioManager';
+import { AudioControlsUI } from '../ui/AudioControlsUI';
 import { NPCManager } from '../managers/NPCManager';
 import { DialogueBox } from '../ui/DialogueBox';
 import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/DialogueTree';
@@ -31,6 +32,7 @@ export class OverworldScene extends Phaser.Scene {
   private npcManager!: NPCManager;
   private dialogueBox!: DialogueBox;
   private audioManager!: AudioManager;
+  private audioControls!: AudioControlsUI;
   private themeEngine!: ThemeEngine;
   private secretsManager!: SecretsManager;
   private achievementEngine!: AchievementEngine;
@@ -167,6 +169,9 @@ export class OverworldScene extends Phaser.Scene {
             this.buildingsVisited.add(id);
             this.checkAchievements();
 
+            // Play door entry sound effect
+            this.audioManager.playSFX('door-enter', 0.5);
+
             this.transition.transitionTo('InteriorScene', {
               buildingId: id,
               buildingName: config?.name ?? id,
@@ -207,7 +212,11 @@ export class OverworldScene extends Phaser.Scene {
 
     // Audio (graceful degradation — works silently with no audio files)
     this.audioManager = new AudioManager(this);
-    this.audioManager.playMusic('village-bgm');
+    this.audioManager.initialize(); // Autoplay compliance
+    this.audioManager.playMusic('ambient', 0.3);
+
+    // Audio controls UI (mute/unmute button)
+    this.audioControls = new AudioControlsUI(this, this.audioManager);
 
     // SecretsManager: code fragment collectibles
     this.secretsManager = new SecretsManager(this);
@@ -236,16 +245,17 @@ export class OverworldScene extends Phaser.Scene {
     this.themeToggleButton.setInteractive({ useHandCursor: true });
     this.themeToggleButton.on('pointerdown', () => this.toggleTheme());
 
-    // Position button in top-right corner
-    this.scale.on('resize', this.positionThemeButton, this);
-    this.positionThemeButton();
+    // Handle canvas resize for UI elements
+    this.scale.on('resize', this.handleResize, this);
+    this.handleResize();
 
     this.transition.fadeIn();
   }
 
-  private positionThemeButton(): void {
+  private handleResize(): void {
     const camera = this.cameras.main;
     this.themeToggleButton.setPosition(camera.width - 10, 10);
+    this.audioControls.resize(camera.width, camera.height);
   }
 
   private async initializeTheme(): Promise<void> {
@@ -530,6 +540,7 @@ export class OverworldScene extends Phaser.Scene {
     const pickedCollectible = this.secretsManager.checkPickup(player.x, player.y);
     if (pickedCollectible) {
       this.playerController.sprite.setVelocity(0); // Stop player movement
+      this.audioManager.playSFX('collectible-pickup', 0.5); // Play pickup sound
       this.showCodeModal(pickedCollectible);
       this.checkAchievements(); // Check for source_diver achievement
       return; // Don't check NPC interaction when picking up collectible
@@ -569,6 +580,9 @@ export class OverworldScene extends Phaser.Scene {
 
     // Track NPC interaction
     this.npcsInteracted.add(dialogueId);
+
+    // Play NPC talk sound effect
+    this.audioManager.playSFX('npc-talk', 0.5);
 
     this.dialogueActive = true;
     this.playerController.sprite.setVelocity(0);
