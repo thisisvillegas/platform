@@ -15,6 +15,7 @@ import brainDumpRoutes from "./routes/brainDumpRoutes";
 import serverRoutes from "./routes/serverRoutes";
 import passRoutes from "./routes/passRoutes";
 import guestRoutes from "./routes/guestRoutes";
+import worldRoutes from "./routes/worldRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,9 @@ app.get("/health", (req: Request, res: Response) => {
 
 // Server stats (no auth required - internal only)
 app.use("/api/server", serverRoutes);
+
+// World theme (GET is public, PUT is Auth0 protected)
+app.use("/api/world", worldRoutes);
 
 // Pass validation is public, CRUD operations are Auth0 protected
 app.use("/api/passes", passRoutes);

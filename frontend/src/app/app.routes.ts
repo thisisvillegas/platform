@@ -73,6 +73,11 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
     },
     {
+        path: 'world-manager',
+        loadComponent: () => import('./pages/dashboard/world-manager/world-manager.component').then(m => m.WorldManagerComponent),
+        canActivate: [AuthGuard]
+    },
+    {
         path: '**',
         redirectTo: '/'
     }

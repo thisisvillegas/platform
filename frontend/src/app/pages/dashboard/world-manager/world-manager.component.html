@@ -1,0 +1,55 @@
+<div class="world-manager-container">
+  <div class="header">
+    <div class="header-icon">🌍</div>
+    <div class="header-text">
+      <h1>World Theme Manager</h1>
+      <p>Control the visual theme of the game world</p>
+    </div>
+  </div>
+
+  <div class="error-banner" *ngIf="error">{{ error }}</div>
+  <div class="success-banner" *ngIf="success">{{ success }}</div>
+
+  <div class="content-grid">
+    <!-- Current Theme Display -->
+    <div class="current-theme-card">
+      <h2>Current Active Theme</h2>
+      <div class="theme-preview" *ngIf="getThemeInfo(currentTheme) as theme">
+        <div class="theme-icon">{{ theme.icon }}</div>
+        <div class="theme-name">{{ theme.name }}</div>
+        <div class="theme-mode">Mode: {{ currentMode === 'auto' ? 'Auto (time-based)' : 'Manual (fixed)' }}</div>
+      </div>
+    </div>
+
+    <!-- Theme Selector -->
+    <div class="selector-card">
+      <h2>Select Theme</h2>
+
+      <div class="theme-grid">
+        <div *ngFor="let theme of themes"
+             class="theme-option"
+             [class.selected]="selectedTheme === theme.id"
+             (click)="selectedTheme = theme.id">
+          <div class="theme-icon-large">{{ theme.icon }}</div>
+          <div class="theme-name-small">{{ theme.name }}</div>
+        </div>
+      </div>
+
+      <div class="mode-toggle">
+        <label>
+          <input type="radio" [(ngModel)]="selectedMode" value="auto" name="mode">
+          <span>Auto (time-based)</span>
+        </label>
+        <label>
+          <input type="radio" [(ngModel)]="selectedMode" value="manual" name="mode">
+          <span>Manual (fixed theme)</span>
+        </label>
+      </div>
+
+      <button class="btn-save" (click)="saveTheme()" [disabled]="loading">
+        <span *ngIf="!loading">Save Changes</span>
+        <span *ngIf="loading">Saving...</span>
+      </button>
+    </div>
+  </div>
+</div>
