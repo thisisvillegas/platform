@@ -12,6 +12,7 @@ export class WorldLoader {
   public tileset!: Phaser.Tilemaps.Tileset;
   public groundLayer!: Phaser.Tilemaps.TilemapLayer;
   public buildingsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  public decorationsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   public collisionLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   public abovePlayerLayer: Phaser.Tilemaps.TilemapLayer | null = null;
 
@@ -42,6 +43,9 @@ export class WorldLoader {
 
     this.buildingsLayer = this.tilemap.createLayer('buildings', tileset);
     if (this.buildingsLayer) this.buildingsLayer.setDepth(5);
+
+    this.decorationsLayer = this.tilemap.createLayer('decorations', tileset);
+    if (this.decorationsLayer) this.decorationsLayer.setDepth(3);
 
     this.collisionLayer = this.tilemap.createLayer('collision', tileset);
     if (this.collisionLayer) {

@@ -49,9 +49,14 @@ export class LoadingScene extends Phaser.Scene {
     });
 
     // Load village world assets
+    this.load.json('village-manifest', '/assets/worlds/village/manifest.json');
     this.load.tilemapTiledJSON('village-map', '/assets/worlds/village/maps/village.json');
     this.load.image('village-tileset', '/assets/worlds/village/tilesets/village-tileset.png');
     this.load.spritesheet('player', '/assets/worlds/village/sprites/player.png', {
+      frameWidth: 16,
+      frameHeight: 16
+    });
+    this.load.spritesheet('npc', '/assets/worlds/village/sprites/npc.png', {
       frameWidth: 16,
       frameHeight: 16
     });

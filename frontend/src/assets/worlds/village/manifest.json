@@ -1,7 +1,7 @@
 {
   "id": "village",
   "name": "Village World Pack",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Starting village area with buildings, NPCs, and paths",
   "tileSize": 16,
   "assets": {
@@ -11,6 +11,18 @@
         "path": "sprites/player.png",
         "frameWidth": 16,
         "frameHeight": 16
+      },
+      {
+        "key": "npc",
+        "path": "sprites/npc.png",
+        "frameWidth": 16,
+        "frameHeight": 16
+      }
+    ],
+    "tilesets": [
+      {
+        "key": "village-tileset",
+        "path": "tilesets/village-tileset.png"
       }
     ],
     "tilemaps": [
@@ -24,6 +36,108 @@
   "maps": {
     "overworld": "maps/village.json"
   },
+  "spawnPoint": {
+    "x": 496,
+    "y": 304
+  },
+  "buildings": [
+    {
+      "id": "tavern",
+      "name": "The Tavern",
+      "type": "app",
+      "appRoute": "/brain-dump",
+      "requiresAuth": true,
+      "description": "Brain Dump - AI-powered note-taking"
+    },
+    {
+      "id": "smart-home",
+      "name": "Smart Home HQ",
+      "type": "app",
+      "appRoute": "/homecontrol",
+      "requiresAuth": true,
+      "description": "Home automation dashboard"
+    },
+    {
+      "id": "war-room",
+      "name": "The War Room",
+      "type": "app",
+      "appRoute": "/tactiqal",
+      "requiresAuth": true,
+      "description": "Tactical planning tool"
+    },
+    {
+      "id": "greenhouse",
+      "name": "The Greenhouse",
+      "type": "app",
+      "appRoute": "/rootine",
+      "requiresAuth": true,
+      "description": "Routine & habit tracking"
+    },
+    {
+      "id": "theater",
+      "name": "The Theater",
+      "type": "external",
+      "appUrl": "https://gifs.thisisvillegas.com",
+      "requiresAuth": false,
+      "description": "GIF Gallery"
+    },
+    {
+      "id": "castle",
+      "name": "The Castle",
+      "type": "placeholder",
+      "requiresAuth": false,
+      "description": "Something is being built here..."
+    },
+    {
+      "id": "workshop",
+      "name": "The Workshop",
+      "type": "placeholder",
+      "requiresAuth": false,
+      "description": "Under construction"
+    },
+    {
+      "id": "server-shack",
+      "name": "Server Shack",
+      "type": "app",
+      "appRoute": "/server",
+      "requiresAuth": true,
+      "description": "Live server stats"
+    },
+    {
+      "id": "about-house",
+      "name": "About House",
+      "type": "info",
+      "requiresAuth": false,
+      "description": "About Andres and this project"
+    },
+    {
+      "id": "generic",
+      "name": "Village House",
+      "type": "placeholder",
+      "requiresAuth": false,
+      "description": "A quiet village house"
+    }
+  ],
+  "npcs": [
+    {
+      "id": "claude",
+      "displayName": "Claude",
+      "spriteKey": "npc-claude",
+      "dialogueId": "claude-townsquare"
+    },
+    {
+      "id": "signpost",
+      "displayName": "Signpost",
+      "spriteKey": "npc-signpost",
+      "dialogueId": "signpost"
+    },
+    {
+      "id": "villager-01",
+      "displayName": "Villager",
+      "spriteKey": "npc-villager",
+      "dialogueId": "villager-01"
+    }
+  ],
   "theme": {
     "name": "medieval-village"
   },

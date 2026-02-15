@@ -5,6 +5,7 @@ import { CameraController } from '../systems/CameraController';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { InteractionSystem } from '../systems/InteractionSystem';
 import { SceneTransition } from '../systems/SceneTransition';
+import { AudioManager } from '../systems/AudioManager';
 import { NPCManager } from '../managers/NPCManager';
 import { DialogueBox } from '../ui/DialogueBox';
 import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/DialogueTree';
@@ -19,6 +20,7 @@ export class OverworldScene extends Phaser.Scene {
   private transition!: SceneTransition;
   private npcManager!: NPCManager;
   private dialogueBox!: DialogueBox;
+  private audioManager!: AudioManager;
   private spawnX?: number;
   private spawnY?: number;
 
@@ -128,6 +130,10 @@ export class OverworldScene extends Phaser.Scene {
 
     // Separate interact key for starting conversations
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    // Audio (graceful degradation — works silently with no audio files)
+    this.audioManager = new AudioManager(this);
+    this.audioManager.playMusic('village-bgm');
 
     this.transition.fadeIn();
   }
