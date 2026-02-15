@@ -24215,7 +24215,7 @@
         },
         {
           "id": 7,
-          "name": "door-castle",
+          "name": "door-desaogo",
           "type": "door",
           "x": 720,
           "y": 544,
@@ -24227,18 +24227,18 @@
             {
               "name": "buildingId",
               "type": "string",
-              "value": "castle"
+              "value": "desaogo"
             },
             {
               "name": "buildingName",
               "type": "string",
-              "value": "Castle Villegas"
+              "value": "Desaogo Studio"
             }
           ]
         },
         {
           "id": 8,
-          "name": "door-workshop",
+          "name": "door-gridup",
           "type": "door",
           "x": 128,
           "y": 800,
@@ -24250,12 +24250,12 @@
             {
               "name": "buildingId",
               "type": "string",
-              "value": "workshop"
+              "value": "gridup"
             },
             {
               "name": "buildingName",
               "type": "string",
-              "value": "The Workshop"
+              "value": "GridUp Arena"
             }
           ]
         },
@@ -24307,7 +24307,7 @@
         },
         {
           "id": 11,
-          "name": "door-generic",
+          "name": "door-plaza",
           "type": "door",
           "x": 864,
           "y": 800,
@@ -24319,12 +24319,12 @@
             {
               "name": "buildingId",
               "type": "string",
-              "value": "generic"
+              "value": "plaza"
             },
             {
               "name": "buildingName",
               "type": "string",
-              "value": "Village Hall"
+              "value": "The Plaza"
             }
           ]
         },

@@ -87,18 +87,20 @@
       "description": "GIF Gallery"
     },
     {
-      "id": "castle",
-      "name": "The Castle",
-      "type": "placeholder",
+      "id": "desaogo",
+      "name": "Desaogo Studio",
+      "type": "external",
+      "appUrl": "https://desaogo.thisisvillegas.com",
       "requiresAuth": false,
-      "description": "Something is being built here..."
+      "description": "Desaogo - Design tool"
     },
     {
-      "id": "workshop",
-      "name": "The Workshop",
-      "type": "placeholder",
+      "id": "gridup",
+      "name": "GridUp Arena",
+      "type": "external",
+      "appUrl": "https://gridup.thisisvillegas.com",
       "requiresAuth": false,
-      "description": "Under construction"
+      "description": "GridUp - Grid builder"
     },
     {
       "id": "server-shack",
@@ -116,11 +118,12 @@
       "description": "About Andres and this project"
     },
     {
-      "id": "generic",
-      "name": "Village House",
-      "type": "placeholder",
+      "id": "plaza",
+      "name": "The Plaza",
+      "type": "external",
+      "appUrl": "https://plaza.thisisvillegas.com",
       "requiresAuth": false,
-      "description": "A quiet village house"
+      "description": "Plaza - Community platform"
     }
   ],
   "npcs": [
