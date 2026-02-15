@@ -159,6 +159,7 @@ export class DialogueBox {
     this.updatePageIndicator();
     this.container.setVisible(true);
     this.isVisible = true;
+    this.updateZoomCompensation();
 
     // Reset key state to avoid instant-trigger from the key that opened dialogue
     this.spaceWasDown = true;
@@ -186,6 +187,7 @@ export class DialogueBox {
   /** Must be called in scene update(). Handles input. */
   update(): void {
     if (!this.isVisible) return;
+    this.updateZoomCompensation();
 
     const spacePressed = this.spaceKey.isDown && !this.spaceWasDown;
     const enterPressed = this.enterKey.isDown && !this.enterWasDown;
@@ -200,8 +202,9 @@ export class DialogueBox {
 
     // ESC closes dialogue immediately
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
+      const cb = this.onComplete;
       this.hide();
-      if (this.onComplete) this.onComplete();
+      if (cb) cb();
       return;
     }
 
@@ -318,8 +321,7 @@ export class DialogueBox {
           fontFamily: 'monospace'
         }
       );
-      choiceText.setScrollFactor(0);
-      choiceText.setDepth(201);
+      this.container.add(choiceText);
       this.choiceTexts.push(choiceText);
     }
 
@@ -386,6 +388,16 @@ export class DialogueBox {
     } else {
       this.pageIndicator.setVisible(false);
     }
+  }
+
+  /** Adjust container position/scale so UI renders at intended size regardless of camera zoom. */
+  private updateZoomCompensation(): void {
+    const cam = this.scene.cameras.main;
+    const zoom = cam.zoom;
+    const cx = cam.width / 2;
+    const cy = cam.height / 2;
+    this.container.setPosition(cx * (1 - 1 / zoom), cy * (1 - 1 / zoom));
+    this.container.setScale(1 / zoom);
   }
 
   destroy(): void {

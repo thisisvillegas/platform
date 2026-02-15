@@ -442,10 +442,11 @@ export class OverworldScene extends Phaser.Scene {
     const width = camera.width;
     const height = camera.height;
 
-    // Create modal container
+    // Create modal container (centered, so scale 1/zoom counteracts camera zoom)
     this.codeModal = this.add.container(width / 2, height / 2);
     this.codeModal.setScrollFactor(0);
     this.codeModal.setDepth(2000);
+    this.codeModal.setScale(1 / camera.zoom);
 
     // Backdrop
     const backdrop = this.add.rectangle(0, 0, width, height, 0x000000, 0.85);

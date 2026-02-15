@@ -45,10 +45,11 @@ export class CollectiblesPanel {
     const width = camera.width;
     const height = camera.height;
 
-    // Create panel container
+    // Create panel container (centered, so scale 1/zoom counteracts camera zoom)
     this.container = this.scene.add.container(width / 2, height / 2);
     this.container.setScrollFactor(0);
     this.container.setDepth(2500);
+    this.container.setScale(1 / camera.zoom);
 
     // Backdrop
     const backdrop = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0.9);
