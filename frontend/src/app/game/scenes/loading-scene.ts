@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 export class LoadingScene extends Phaser.Scene {
   private progressBar!: Phaser.GameObjects.Graphics;

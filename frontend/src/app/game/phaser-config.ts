@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { LoadingScene } from './scenes/loading-scene';
 import { BootScene } from './scenes/boot-scene';
 
