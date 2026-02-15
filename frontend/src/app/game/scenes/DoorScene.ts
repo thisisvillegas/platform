@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { environment } from '../../../environments/environment';
 
 export class DoorScene extends Phaser.Scene {
   private doorSprite!: Phaser.GameObjects.Rectangle;
@@ -203,7 +204,7 @@ export class DoorScene extends Phaser.Scene {
 
     try {
       // Call validation API
-      const response = await fetch('/api/passes/validate', {
+      const response = await fetch(`${environment.apiUrl}/api/passes/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: this.codeInput })
