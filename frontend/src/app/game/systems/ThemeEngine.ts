@@ -9,6 +9,7 @@ export class ThemeEngine {
   private currentMusicSound: Phaser.Sound.BaseSound | null = null;
   private particleEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private activeDecorationLayers: string[] = [];
+  private overlay: Phaser.GameObjects.Rectangle | null = null;
 
   constructor(scene: Phaser.Scene, worldPackPath: string) {
     this.scene = scene;
@@ -34,16 +35,36 @@ export class ThemeEngine {
   applyTheme(theme: Theme): void {
     console.log(`Applying theme: ${theme.name} (${theme.id})`);
 
-    // Apply camera color tint/overlay
+    // Apply camera color overlay using a rectangle
     const camera = this.scene.cameras.main;
+
+    // Remove existing overlay
+    if (this.overlay) {
+      this.overlay.destroy();
+      this.overlay = null;
+    }
+
+    // Create new overlay if specified
     if (theme.palette.overlay) {
-      const overlay = theme.palette.overlay;
-      const colorInt = Phaser.Display.Color.HexStringToColor(overlay.color).color;
-      const alpha = Math.floor(overlay.alpha * 255);
-      const tint = (alpha << 24) | colorInt;
-      camera.setTint(tint);
-    } else {
-      camera.clearTint();
+      const overlayData = theme.palette.overlay;
+      const color = Phaser.Display.Color.HexStringToColor(overlayData.color).color;
+
+      this.overlay = this.scene.add.rectangle(
+        0, 0,
+        camera.width, camera.height,
+        color,
+        overlayData.alpha
+      );
+      this.overlay.setOrigin(0, 0);
+      this.overlay.setScrollFactor(0);
+      this.overlay.setDepth(500); // Above game world, below UI
+
+      // Update overlay size on camera resize
+      this.scene.scale.on('resize', () => {
+        if (this.overlay) {
+          this.overlay.setSize(camera.width, camera.height);
+        }
+      });
     }
 
     // Handle particles
@@ -64,7 +85,7 @@ export class ThemeEngine {
     // Destroy existing particle emitter
     if (this.particleEmitter) {
       this.particleEmitter.stop();
-      this.particleEmitter.remove();
+      this.particleEmitter.destroy();
       this.particleEmitter = null;
     }
 
@@ -85,17 +106,11 @@ export class ThemeEngine {
 
       // Get camera bounds for emit zone
       const camera = this.scene.cameras.main;
-      const emitZone = new Phaser.Geom.Rectangle(
-        camera.scrollX,
-        camera.scrollY - 10,
-        camera.width,
-        10
-      );
 
-      // Create particle emitter
-      const particleManager = this.scene.add.particles(0, 0, `particle-${theme.id}`, {
-        x: { min: emitZone.x, max: emitZone.x + emitZone.width },
-        y: emitZone.y,
+      // Base emitter config
+      const emitterConfig: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig = {
+        x: { min: 0, max: camera.width },
+        y: -10,
         speed: { min: particles.speed * 0.8, max: particles.speed * 1.2 },
         gravityY: 50,
         lifespan: 5000,
@@ -103,27 +118,27 @@ export class ThemeEngine {
         alpha: { start: 1, end: 0 },
         frequency: frequency,
         blendMode: 'ADD'
-      });
+      };
 
-      this.particleEmitter = particleManager.emitters.getFirst() as Phaser.GameObjects.Particles.ParticleEmitter;
-
-      // Type-specific tweaks
+      // Type-specific configs
       if (particles.type === 'hearts') {
-        this.particleEmitter.setGravityY(30); // Slower fall
-        this.particleEmitter.setAngle({ min: -45, max: 45 });
+        emitterConfig.gravityY = 30; // Slower fall
+        emitterConfig.angle = { min: -45, max: 45 };
       } else if (particles.type === 'snowflakes') {
-        this.particleEmitter.setGravityY(60); // Faster fall
-        this.particleEmitter.setFrequency(frequency * 0.7); // Higher density
+        emitterConfig.gravityY = 60; // Faster fall
+        emitterConfig.frequency = frequency * 0.7; // Higher density
       } else if (particles.type === 'leaves') {
-        this.particleEmitter.setGravityY(40);
-        this.particleEmitter.setAngle({ min: -90, max: 90 });
-        this.particleEmitter.setSpeedX({ min: -20, max: 20 }); // Drift
+        emitterConfig.gravityY = 40;
+        emitterConfig.angle = { min: -90, max: 90 };
+        emitterConfig.speedX = { min: -20, max: 20 }; // Drift
       } else if (particles.type === 'fog') {
-        this.particleEmitter.setGravityY(10); // Very slow fall
-        this.particleEmitter.setScale({ start: 2, end: 3 }); // Larger
-        this.particleEmitter.setAlpha({ start: 0.3, end: 0 });
+        emitterConfig.gravityY = 10; // Very slow fall
+        emitterConfig.scale = { start: 2, end: 3 }; // Larger
+        emitterConfig.alpha = { start: 0.3, end: 0 };
       }
 
+      // Create particle emitter
+      this.particleEmitter = this.scene.add.particles(0, 0, `particle-${theme.id}`, emitterConfig);
       this.particleEmitter.start();
     }
   }
@@ -247,9 +262,13 @@ export class ThemeEngine {
 
   destroy(): void {
     // Clean up resources
+    if (this.overlay) {
+      this.overlay.destroy();
+    }
+
     if (this.particleEmitter) {
       this.particleEmitter.stop();
-      this.particleEmitter.remove();
+      this.particleEmitter.destroy();
     }
 
     if (this.currentAmbientSound) {

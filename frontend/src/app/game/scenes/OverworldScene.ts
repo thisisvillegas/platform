@@ -11,6 +11,7 @@ import { DialogueBox } from '../ui/DialogueBox';
 import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/DialogueTree';
 import { DialogueChoice } from '../ui/DialogueBox';
 import { WorldPackBuilding } from '../types/WorldPack';
+import { ThemeEngine } from '../systems/ThemeEngine';
 
 interface ManifestJSON {
   buildings?: WorldPackBuilding[];
@@ -26,8 +27,13 @@ export class OverworldScene extends Phaser.Scene {
   private npcManager!: NPCManager;
   private dialogueBox!: DialogueBox;
   private audioManager!: AudioManager;
+  private themeEngine!: ThemeEngine;
+  private themeToggleButton!: Phaser.GameObjects.Text;
   private spawnX?: number;
   private spawnY?: number;
+
+  // Public tilemap for ThemeEngine decoration layer access
+  public tilemap!: Phaser.Tilemaps.Tilemap;
 
   // Building config from manifest
   private buildingConfigs = new Map<string, WorldPackBuilding>();
@@ -88,6 +94,7 @@ export class OverworldScene extends Phaser.Scene {
 
     // Build tilemap with all layers
     this.worldLoader.create();
+    this.tilemap = this.worldLoader.tilemap;
 
     // Determine spawn position: sessionStorage (returning from app) > scene data (returning from interior) > default
     const defaultSpawn = this.worldLoader.getSpawnPoint();
@@ -178,7 +185,75 @@ export class OverworldScene extends Phaser.Scene {
     this.audioManager = new AudioManager(this);
     this.audioManager.playMusic('village-bgm');
 
+    // Theme Engine: auto-detect day/night from local time
+    this.themeEngine = new ThemeEngine(this, '/assets/worlds/village');
+    this.initializeTheme();
+
+    // Day/night toggle button in top-right corner
+    this.themeToggleButton = this.add.text(0, 0, '', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#000000aa',
+      padding: { x: 8, y: 4 }
+    });
+    this.themeToggleButton.setOrigin(1, 0);
+    this.themeToggleButton.setScrollFactor(0);
+    this.themeToggleButton.setDepth(1000);
+    this.themeToggleButton.setInteractive({ useHandCursor: true });
+    this.themeToggleButton.on('pointerdown', () => this.toggleTheme());
+
+    // Position button in top-right corner
+    this.scale.on('resize', this.positionThemeButton, this);
+    this.positionThemeButton();
+
     this.transition.fadeIn();
+  }
+
+  private positionThemeButton(): void {
+    const camera = this.cameras.main;
+    this.themeToggleButton.setPosition(camera.width - 10, 10);
+  }
+
+  private async initializeTheme(): Promise<void> {
+    // Check for manual theme override in sessionStorage
+    const storedTheme = sessionStorage.getItem('worldTheme');
+
+    if (storedTheme) {
+      try {
+        await this.themeEngine.switchTheme(storedTheme);
+        this.updateThemeButtonText(storedTheme);
+        return;
+      } catch (error) {
+        console.warn('Failed to load stored theme, falling back to auto-detection', error);
+      }
+    }
+
+    // Auto-detect based on local time (6 AM - 6 PM = day, else = night)
+    const hour = new Date().getHours();
+    const themeId = (hour >= 6 && hour < 18) ? 'default' : 'night';
+
+    try {
+      const theme = await this.themeEngine.loadTheme(themeId);
+      this.themeEngine.applyTheme(theme);
+      this.updateThemeButtonText(themeId);
+    } catch (error) {
+      console.error('Failed to load auto-detected theme:', error);
+    }
+  }
+
+  private toggleTheme(): void {
+    const currentTheme = this.themeEngine.getCurrentTheme();
+    const newThemeId = currentTheme?.id === 'default' ? 'night' : 'default';
+
+    this.themeEngine.switchTheme(newThemeId);
+    this.updateThemeButtonText(newThemeId);
+
+    // Persist theme choice in sessionStorage
+    sessionStorage.setItem('worldTheme', newThemeId);
+  }
+
+  private updateThemeButtonText(themeId: string): void {
+    this.themeToggleButton.setText(themeId === 'default' ? '🌙' : '☀️');
   }
 
   override update(): void {
