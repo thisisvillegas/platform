@@ -30,7 +30,7 @@ databaseService.connect().catch(console.error);
 // Connect Mongoose (for Pass and Guest models)
 const mongoUri = process.env.MONGODB_URI;
 if (mongoUri) {
-    mongoose.connect(mongoUri, { dbName: 'racing-dashboard' })
+    mongoose.connect(mongoUri)
         .then(() => console.log('✅ Mongoose connected'))
         .catch(err => console.error('❌ Mongoose connection error:', err));
 }
