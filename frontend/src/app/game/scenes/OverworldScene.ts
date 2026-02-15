@@ -550,6 +550,14 @@ export class OverworldScene extends Phaser.Scene {
       }
     });
 
+    // ESC also closes the collectibles panel
+    const panelEsc = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    panelEsc.on('down', () => {
+      if (this.collectiblesPanel.getIsVisible()) {
+        this.collectiblesPanel.hide();
+      }
+    });
+
     // Konami code detection (store ref for cleanup)
     this.konamiHandler = (event: KeyboardEvent) => {
       const key = event.key.toUpperCase();
@@ -651,8 +659,8 @@ export class OverworldScene extends Phaser.Scene {
     // Theme particles must track camera every frame regardless of dialogue state
     this.themeEngine?.update();
 
-    // Handle dialogue input when active or modal is open
-    if (this.dialogueActive || this.codeModal) {
+    // Handle dialogue input when active or modal/panel is open
+    if (this.dialogueActive || this.codeModal || this.collectiblesPanel.getIsVisible()) {
       if (this.dialogueActive) {
         this.dialogueBox.update();
       }
@@ -687,9 +695,9 @@ export class OverworldScene extends Phaser.Scene {
       this.saveProgress();
     }
 
-    // NPC proximity check
+    // NPC proximity check — only show prompt for NPCs with dialogue
     const closestNPC = this.npcManager.getClosestNPC(player.x, player.y);
-    if (closestNPC && !this.dialogueActive) {
+    if (closestNPC && !this.dialogueActive && closestNPC.dialogueId) {
       this.npcPrompt!.setPosition(closestNPC.x, closestNPC.y - 20);
       this.npcPrompt!.setVisible(true);
 
@@ -710,7 +718,15 @@ export class OverworldScene extends Phaser.Scene {
     const cacheKey = `dialogue-${dialogueId}`;
     const data = this.cache.json.get(cacheKey) as DialogueTreeData | undefined;
     if (!data) {
-      console.warn(`No dialogue data found for key: ${cacheKey}`);
+      // Show a generic fallback line for NPCs without dialogue data
+      this.dialogueActive = true;
+      this.playerController.sprite.setVelocity(0);
+      this.audioManager.playSFX('npc-talk', 0.5);
+      this.dialogueBox.show(
+        '...',
+        npcName,
+        () => this.endDialogue()
+      );
       return;
     }
 
