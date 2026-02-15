@@ -7,6 +7,7 @@ import "./instrument";
 import * as Sentry from "@sentry/node";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import { lambdaService } from "./lambdaService";
 import { databaseService } from "./database";
 import { jwtCheck } from "./middleware/auth";
@@ -22,8 +23,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// COnnect to MongoDB
+// Connect to MongoDB (native driver for legacy collections)
 databaseService.connect().catch(console.error);
+
+// Connect Mongoose (for Pass and Guest models)
+const mongoUri = process.env.MONGODB_URI;
+if (mongoUri) {
+    mongoose.connect(mongoUri, { dbName: 'racing-dashboard' })
+        .then(() => console.log('✅ Mongoose connected'))
+        .catch(err => console.error('❌ Mongoose connection error:', err));
+}
 
 // Health check endpoint (no auth required)
 app.get("/health", (req: Request, res: Response) => {
