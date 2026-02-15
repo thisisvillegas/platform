@@ -149,6 +149,12 @@ export class CinematicScene extends Phaser.Scene {
     this.enterButtonBg.on('pointerdown', () => {
       this.transitionToDoorScene();
     });
+
+    // Keyboard Enter handler
+    const enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    enterKey.once('down', () => {
+      this.transitionToDoorScene();
+    });
   }
 
   private transitionToDoorScene(): void {

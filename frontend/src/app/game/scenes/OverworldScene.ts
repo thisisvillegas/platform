@@ -665,6 +665,8 @@ export class OverworldScene extends Phaser.Scene {
       if (this.dialogueActive) {
         this.dialogueBox.update();
       }
+      // Keep InteractionSystem key state in sync to prevent false triggers on resume
+      this.interactionSystem.syncKeys();
       return;
     }
 

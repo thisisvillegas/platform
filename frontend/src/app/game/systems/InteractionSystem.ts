@@ -84,6 +84,12 @@ export class InteractionSystem {
     }
   }
 
+  /** Keep key tracking in sync when update() is not being called (e.g. during dialogue). */
+  syncKeys(): void {
+    this.enterWasDown = this.enterKey.isDown;
+    this.spaceWasDown = this.spaceKey.isDown;
+  }
+
   destroy(): void {
     for (const interactable of this.interactables) {
       interactable.prompt.destroy();

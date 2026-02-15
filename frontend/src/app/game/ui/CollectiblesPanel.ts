@@ -55,9 +55,9 @@ export class CollectiblesPanel {
     const backdrop = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0.9);
     backdrop.setOrigin(0.5);
 
-    // Panel box
-    const panelWidth = Math.min(700, width - 40);
-    const panelHeight = Math.min(550, height - 40);
+    // Panel box (600 max to keep comfortable margins on 800px canvas)
+    const panelWidth = Math.min(600, width - 80);
+    const panelHeight = Math.min(500, height - 60);
     const panelBg = this.scene.add.rectangle(0, 0, panelWidth, panelHeight, 0x1a1a2e);
     panelBg.setStrokeStyle(3, 0x00ffff);
 
@@ -133,7 +133,7 @@ export class CollectiblesPanel {
 
     // Grid of achievement badges (3 per row)
     const achievementItems: Phaser.GameObjects.GameObject[] = [];
-    const startX = -panelWidth / 2 + 50;
+    const startX = -panelWidth / 2 + 80;
     let gridX = startX;
     let gridY = yOffset;
     const spacing = 100;
