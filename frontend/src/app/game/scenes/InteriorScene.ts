@@ -115,18 +115,27 @@ export class InteriorScene extends Phaser.Scene {
     this.enterWasDown = this.enterKey.isDown;
 
     if (enterPressed && (this.buildingType === 'app' || this.buildingType === 'external')) {
+      // Block launch for guests on auth-required buildings
+      if (this.requiresAuth && this.isGuestUser()) return;
       this.launchApp();
     }
   }
 
   private createAppContent(cx: number, cy: number): void {
-    // Auth warning for guest visitors
+    // Block guests from launching auth-required apps
     if (this.requiresAuth && this.isGuestUser()) {
-      this.add.text(cx, cy - 5, 'Owner access only — requires login', {
-        fontSize: '12px',
+      this.add.text(cx, cy + 10, 'Owner access only', {
+        fontSize: '16px',
         color: '#ff8844',
+        fontFamily: 'monospace',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      this.add.text(cx, cy + 35, 'This app requires the owner to be logged in.', {
+        fontSize: '11px',
+        color: '#887766',
         fontFamily: 'monospace'
       }).setOrigin(0.5);
+      return; // No launch prompt, no ENTER handler
     }
 
     // Decorative border box
