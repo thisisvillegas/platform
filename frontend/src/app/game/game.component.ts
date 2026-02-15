@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, NgZone } from '@angular/core';
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { createPhaserConfig } from './phaser-config';
 import { PhaserBridgeService } from './services/phaser-bridge.service';
 
