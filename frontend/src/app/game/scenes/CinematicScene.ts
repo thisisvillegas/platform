@@ -11,6 +11,7 @@ export class CinematicScene extends Phaser.Scene {
   private fullText = 'Built by a human. Powered by Claude. Enter the world.';
   private currentCharIndex = 0;
   private typewriterTimer?: Phaser.Time.TimerEvent;
+  private isTransitioning = false;
 
   constructor() {
     super({ key: 'CinematicScene' });
@@ -150,14 +151,17 @@ export class CinematicScene extends Phaser.Scene {
       this.transitionToDoorScene();
     });
 
-    // Keyboard Enter handler
+    // Keyboard Enter/Space handler
     const enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    enterKey.once('down', () => {
-      this.transitionToDoorScene();
-    });
+    const spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    enterKey.once('down', () => this.transitionToDoorScene());
+    spaceKey.once('down', () => this.transitionToDoorScene());
   }
 
   private transitionToDoorScene(): void {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
     // Disable button during transition
     if (this.enterButtonBg) {
       this.enterButtonBg.disableInteractive();

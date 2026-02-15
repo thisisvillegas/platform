@@ -72,6 +72,7 @@ export class OverworldScene extends Phaser.Scene {
   // Key for NPC interaction (separate from dialogue advance keys)
   private interactKey!: Phaser.Input.Keyboard.Key;
   private interactWasDown = false;
+  private escKey!: Phaser.Input.Keyboard.Key;
 
   // Stored handler references for cleanup on shutdown
   private beforeUnloadHandler: (() => void) | null = null;
@@ -223,6 +224,7 @@ export class OverworldScene extends Phaser.Scene {
 
     // Separate interact key for starting conversations
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
     // Audio (graceful degradation — works silently with no audio files)
     this.audioManager = new AudioManager(this);
@@ -508,19 +510,7 @@ export class OverworldScene extends Phaser.Scene {
 
     // Add all elements
     this.codeModal.add([backdrop, modalBg, title, langLabel, codeText, explanation, closeBtn, closeBtnText]);
-
-    // Close on ESC or SPACE key
-    const escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    const spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-    const closeHandler = () => {
-      this.closeCodeModal();
-      escKey.off('down', closeHandler);
-      spaceKey.off('down', closeHandler);
-    };
-
-    escKey.once('down', closeHandler);
-    spaceKey.once('down', closeHandler);
+    // ESC/SPACE close is handled centrally in update() to prevent stale key state
   }
 
   private closeCodeModal(): void {
@@ -551,13 +541,7 @@ export class OverworldScene extends Phaser.Scene {
       }
     });
 
-    // ESC also closes the collectibles panel
-    const panelEsc = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    panelEsc.on('down', () => {
-      if (this.collectiblesPanel.getIsVisible()) {
-        this.collectiblesPanel.hide();
-      }
-    });
+    // ESC close for collectibles panel is handled centrally in update()
 
     // Konami code detection (store ref for cleanup)
     this.konamiHandler = (event: KeyboardEvent) => {
@@ -660,12 +644,28 @@ export class OverworldScene extends Phaser.Scene {
     // Theme particles must track camera every frame regardless of dialogue state
     this.themeEngine?.update();
 
-    // Handle dialogue input when active or modal/panel is open
-    if (this.dialogueActive || this.codeModal || this.collectiblesPanel.getIsVisible()) {
-      if (this.dialogueActive) {
-        this.dialogueBox.update();
+    // Dialogue mode: DialogueBox handles all input including its own ESC
+    if (this.dialogueActive) {
+      this.dialogueBox.update();
+      this.interactionSystem.syncKeys();
+      return;
+    }
+
+    // Code modal: close on ESC or SPACE (centralized here, not via event handlers)
+    if (this.codeModal) {
+      if (Phaser.Input.Keyboard.JustDown(this.escKey) ||
+          Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+        this.closeCodeModal();
       }
-      // Keep InteractionSystem key state in sync to prevent false triggers on resume
+      this.interactionSystem.syncKeys();
+      return;
+    }
+
+    // Collectibles panel: close on ESC
+    if (this.collectiblesPanel.getIsVisible()) {
+      if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
+        this.collectiblesPanel.hide();
+      }
       this.interactionSystem.syncKeys();
       return;
     }
