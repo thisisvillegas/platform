@@ -1,10 +1,21 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router } from '@angular/router';
 import { AuthGuard } from '@auth0/auth0-angular';
+
+/** Redirect to /world if the user has a saved world position (prevents cinematic replay on back-nav). */
+const worldSessionGuard = () => {
+    const pos = sessionStorage.getItem('worldPosition');
+    if (pos) {
+        return inject(Router).createUrlTree(['/world']);
+    }
+    return true;
+};
 
 export const routes: Routes = [
     {
         path: '',
         loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
+        canActivate: [worldSessionGuard],
         title: 'Platform - Enter the Village'
     },
     {

@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, NgZone, Input } from '@angular/core';
+import { Location } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import * as Phaser from 'phaser';
 import { createPhaserConfig } from './phaser-config';
@@ -23,7 +24,8 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
     private phaserBridge: PhaserBridgeService,
     private worldNavigation: WorldNavigationService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +54,16 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
       this.game.registry.set('navigateToProjects', () => {
         this.ngZone.run(() => {
           this.router.navigate(['/projects']);
+        });
+      });
+
+      // Sync browser URL to /world when OverworldScene activates
+      // (prevents browser back landing on / and replaying the cinematic)
+      this.game.registry.set('syncWorldUrl', () => {
+        this.ngZone.run(() => {
+          if (this.location.path() !== '/world') {
+            this.location.replaceState('/world');
+          }
         });
       });
 

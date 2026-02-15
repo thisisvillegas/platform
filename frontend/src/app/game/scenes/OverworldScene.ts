@@ -288,6 +288,10 @@ export class OverworldScene extends Phaser.Scene {
 
     this.transition.fadeIn();
 
+    // Sync Angular URL to /world so browser back doesn't replay the cinematic
+    const syncUrl = this.game.registry.get('syncWorldUrl') as (() => void) | undefined;
+    if (syncUrl) syncUrl();
+
     // Onboarding: show 3-step tooltip on first spawn
     if (!localStorage.getItem('onboardingCompleted')) {
       this.showOnboarding();
