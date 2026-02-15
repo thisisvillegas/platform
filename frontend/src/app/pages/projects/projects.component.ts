@@ -50,6 +50,30 @@ export class ProjectsComponent {
       icon: '🎬'
     },
     {
+      name: 'Desaogo',
+      description: 'Personal productivity suite — tasks, notes, finance tracking, health logs, and calendar.',
+      externalUrl: 'https://desaogo.thisisvillegas.com',
+      icon: '📋'
+    },
+    {
+      name: 'GridUp',
+      description: 'Grid-based builder tool for creating layouts, puzzles, and designs.',
+      externalUrl: 'https://gridup.thisisvillegas.com',
+      icon: '🔲'
+    },
+    {
+      name: 'Plaza',
+      description: 'Social network for sharing updates and connecting with friends.',
+      externalUrl: 'https://plaza.thisisvillegas.com',
+      icon: '💬'
+    },
+    {
+      name: 'Server Stats',
+      description: 'Real-time Raspberry Pi server monitoring — CPU, memory, disk, network, and processes.',
+      route: '/dashboard',
+      icon: '📡'
+    },
+    {
       name: 'Platform World',
       description: 'Interactive 2D pixel-art portfolio world. Experience the full game.',
       route: '/world',
