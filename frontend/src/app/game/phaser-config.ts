@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { LoadingScene } from './scenes/loading-scene';
-import { BootScene } from './scenes/boot-scene';
+import { OverworldScene } from './scenes/OverworldScene';
+import { InteriorScene } from './scenes/InteriorScene';
 
 export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig {
   return {
@@ -11,7 +12,7 @@ export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig
     pixelArt: true,
     roundPixels: true,
     backgroundColor: '#000000',
-    scene: [LoadingScene, BootScene],
+    scene: [LoadingScene, OverworldScene, InteriorScene],
     physics: {
       default: 'arcade',
       arcade: {

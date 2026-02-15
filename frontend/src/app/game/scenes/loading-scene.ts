@@ -48,11 +48,16 @@ export class LoadingScene extends Phaser.Scene {
       this.percentText.destroy();
     });
 
-    // Load all game assets here
-    this.load.image('test-tile', '/assets/worlds/village/sprites/test-tile.png');
+    // Load village world assets
+    this.load.tilemapTiledJSON('village-map', '/assets/worlds/village/maps/village.json');
+    this.load.image('village-tileset', '/assets/worlds/village/tilesets/village-tileset.png');
+    this.load.spritesheet('player', '/assets/worlds/village/sprites/player.png', {
+      frameWidth: 16,
+      frameHeight: 16
+    });
   }
 
   create(): void {
-    this.scene.start('BootScene');
+    this.scene.start('OverworldScene');
   }
 }
