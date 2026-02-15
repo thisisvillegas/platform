@@ -18,16 +18,9 @@ export class CameraController {
     this.camera.startFollow(target, true, 0.1, 0.1);
   }
 
-  /** Cinematic arrival: starts at 1.0x, tweens to 1.5x over 1.5 seconds. */
+  /** Set camera to 1x zoom (integer zoom avoids tile seam artifacts). */
   playArrivalZoom(): void {
     this.camera.setZoom(1.0);
-
-    this.scene.tweens.add({
-      targets: this.camera,
-      zoom: 1.5,
-      duration: 1500,
-      ease: 'Cubic.easeOut'
-    });
   }
 
   /** Set camera zoom immediately. */
