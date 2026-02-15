@@ -62,7 +62,8 @@ export class PlayerController {
     } else {
       const anim = this.sprite.anims.currentAnim;
       if (anim) {
-        const dir = anim.key.replace('walk-', '');
+        // Extract direction from either "walk-left" or "idle-left"
+        const dir = anim.key.split('-').pop();
         this.sprite.anims.play('idle-' + dir, true);
       }
     }

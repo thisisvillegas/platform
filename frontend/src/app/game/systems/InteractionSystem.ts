@@ -15,6 +15,8 @@ export class InteractionSystem {
   private activeInteractable: Interactable | null = null;
   private enterKey: Phaser.Input.Keyboard.Key;
   private spaceKey: Phaser.Input.Keyboard.Key;
+  private enterWasDown = false;
+  private spaceWasDown = false;
   private readonly PROXIMITY_RADIUS = 32;
 
   constructor(scene: Phaser.Scene, player: Phaser.GameObjects.Sprite) {
@@ -69,11 +71,14 @@ export class InteractionSystem {
       this.activeInteractable = null;
     }
 
-    if (
-      this.activeInteractable &&
-      (Phaser.Input.Keyboard.JustDown(this.enterKey) ||
-       Phaser.Input.Keyboard.JustDown(this.spaceKey))
-    ) {
+    // Manual edge detection — more reliable than Phaser's JustDown which
+    // can miss keypresses when multiple systems share the keyboard plugin
+    const enterPressed = this.enterKey.isDown && !this.enterWasDown;
+    const spacePressed = this.spaceKey.isDown && !this.spaceWasDown;
+    this.enterWasDown = this.enterKey.isDown;
+    this.spaceWasDown = this.spaceKey.isDown;
+
+    if (this.activeInteractable && (enterPressed || spacePressed)) {
       this.activeInteractable.callback(this.activeInteractable.data);
     }
   }
