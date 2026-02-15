@@ -30,9 +30,10 @@ export class InteractionSystem {
     x: number,
     y: number,
     data: Record<string, unknown>,
-    callback: (data: Record<string, unknown>) => void
+    callback: (data: Record<string, unknown>) => void,
+    promptText = 'Press Enter'
   ): void {
-    const prompt = this.scene.add.text(x, y - 24, 'Press Enter', {
+    const prompt = this.scene.add.text(x, y - 24, promptText, {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#000000aa',

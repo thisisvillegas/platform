@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, NgZone } from '@angular/co
 import * as Phaser from 'phaser';
 import { createPhaserConfig } from './phaser-config';
 import { PhaserBridgeService } from './services/phaser-bridge.service';
+import { WorldNavigationService } from './services/world-navigation.service';
 
 @Component({
   selector: 'app-game',
@@ -16,7 +17,8 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private ngZone: NgZone,
-    private phaserBridge: PhaserBridgeService
+    private phaserBridge: PhaserBridgeService,
+    private worldNavigation: WorldNavigationService
   ) {}
 
   ngOnInit(): void {}
@@ -25,6 +27,15 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       const config = createPhaserConfig('game-container');
       this.game = new Phaser.Game(config);
+
+      // Register navigation callback so Phaser scenes can trigger Angular routing
+      this.game.registry.set('navigateToApp', (
+        buildingId: string, route: string, playerX: number, playerY: number, isExternal: boolean
+      ) => {
+        this.ngZone.run(() => {
+          this.worldNavigation.navigateToApp(buildingId, playerX, playerY, route, isExternal);
+        });
+      });
 
       // Hide bootstrap overlay once Phaser canvas is ready
       setTimeout(() => {

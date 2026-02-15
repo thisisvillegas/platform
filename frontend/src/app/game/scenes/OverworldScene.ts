@@ -10,6 +10,11 @@ import { NPCManager } from '../managers/NPCManager';
 import { DialogueBox } from '../ui/DialogueBox';
 import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/DialogueTree';
 import { DialogueChoice } from '../ui/DialogueBox';
+import { WorldPackBuilding } from '../types/WorldPack';
+
+interface ManifestJSON {
+  buildings?: WorldPackBuilding[];
+}
 
 export class OverworldScene extends Phaser.Scene {
   private playerController!: PlayerController;
@@ -23,6 +28,9 @@ export class OverworldScene extends Phaser.Scene {
   private audioManager!: AudioManager;
   private spawnX?: number;
   private spawnY?: number;
+
+  // Building config from manifest
+  private buildingConfigs = new Map<string, WorldPackBuilding>();
 
   // Dialogue state
   private dialogueActive = false;
@@ -57,6 +65,9 @@ export class OverworldScene extends Phaser.Scene {
     this.npcManager = new NPCManager(this);
     this.npcManager.preload();
 
+    // Load world manifest for building metadata
+    this.load.json('world-manifest', '/assets/worlds/village/manifest.json');
+
     // Load dialogue JSON files
     this.load.json('dialogue-claude-townsquare', '/assets/worlds/village/dialogue/claude-townsquare.json');
     this.load.json('dialogue-signpost', '/assets/worlds/village/dialogue/signpost.json');
@@ -66,13 +77,34 @@ export class OverworldScene extends Phaser.Scene {
   create(): void {
     this.transition = new SceneTransition(this);
 
+    // Parse building configs from manifest
+    const manifest = this.cache.json.get('world-manifest') as ManifestJSON | undefined;
+    this.buildingConfigs.clear();
+    if (manifest?.buildings) {
+      for (const b of manifest.buildings) {
+        this.buildingConfigs.set(b.id, b);
+      }
+    }
+
     // Build tilemap with all layers
     this.worldLoader.create();
 
-    // Determine spawn position (returning from interior overrides default)
+    // Determine spawn position: sessionStorage (returning from app) > scene data (returning from interior) > default
     const defaultSpawn = this.worldLoader.getSpawnPoint();
-    const startX = this.spawnX ?? defaultSpawn.x;
-    const startY = this.spawnY ?? defaultSpawn.y;
+    let startX = this.spawnX ?? defaultSpawn.x;
+    let startY = this.spawnY ?? defaultSpawn.y;
+
+    const savedStr = sessionStorage.getItem('worldPosition');
+    if (savedStr) {
+      try {
+        const saved = JSON.parse(savedStr);
+        if (saved.x != null && saved.y != null) {
+          startX = saved.x;
+          startY = saved.y;
+        }
+        sessionStorage.removeItem('worldPosition');
+      } catch { /* ignore corrupt data */ }
+    }
 
     // Create player at spawn point
     this.playerController.create(startX, startY);
@@ -96,16 +128,27 @@ export class OverworldScene extends Phaser.Scene {
     for (const door of doors) {
       if (door.x != null && door.y != null) {
         const buildingId = this.getDoorProperty(door, 'buildingId') ?? door.name ?? 'building';
+        const buildingConfig = this.buildingConfigs.get(buildingId);
+        const buildingName = buildingConfig?.name ?? buildingId;
         this.interactionSystem.registerInteractable(
           door.x, door.y,
           { buildingId },
           (data) => {
+            const id = data['buildingId'] as string;
+            const config = this.buildingConfigs.get(id);
             this.transition.transitionTo('InteriorScene', {
-              buildingId: data['buildingId'],
+              buildingId: id,
+              buildingName: config?.name ?? id,
+              buildingType: config?.type ?? 'placeholder',
+              appRoute: config?.appRoute,
+              appUrl: config?.appUrl,
+              requiresAuth: config?.requiresAuth ?? false,
+              description: config?.description ?? '',
               returnX: player.x,
               returnY: player.y
             });
-          }
+          },
+          `Enter ${buildingName}`
         );
       }
     }

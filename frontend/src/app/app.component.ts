@@ -1,6 +1,7 @@
 import { Component, inject, OnDestroy, OnInit, HostListener } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { CommonModule } from "@angular/common";
+import { ReturnToWorldComponent } from "./components/return-to-world/return-to-world.component";
 import { HttpClient } from "@angular/common/http";
 import { ThemeService } from "./services/theme.service";
 import { ServerOverlayService } from "./services/server-overlay.service";
@@ -23,7 +24,7 @@ interface HistoryPoint { cpu: number; mem: number; temp: number; }
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, ReturnToWorldComponent],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss"
 })
