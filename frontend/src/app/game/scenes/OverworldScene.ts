@@ -5,6 +5,10 @@ import { CameraController } from '../systems/CameraController';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { InteractionSystem } from '../systems/InteractionSystem';
 import { SceneTransition } from '../systems/SceneTransition';
+import { NPCManager } from '../managers/NPCManager';
+import { DialogueBox } from '../ui/DialogueBox';
+import { DialogueTree, DialogueNode, DialogueTreeData } from '../dialogue/DialogueTree';
+import { DialogueChoice } from '../ui/DialogueBox';
 
 export class OverworldScene extends Phaser.Scene {
   private playerController!: PlayerController;
@@ -13,8 +17,22 @@ export class OverworldScene extends Phaser.Scene {
   private collisionSystem!: CollisionSystem;
   private interactionSystem!: InteractionSystem;
   private transition!: SceneTransition;
+  private npcManager!: NPCManager;
+  private dialogueBox!: DialogueBox;
   private spawnX?: number;
   private spawnY?: number;
+
+  // Dialogue state
+  private dialogueActive = false;
+  private currentDialogueTree: DialogueTree | null = null;
+  private gameState: Record<string, unknown> = {};
+
+  // NPC interaction prompt
+  private npcPrompt: Phaser.GameObjects.Text | null = null;
+
+  // Key for NPC interaction (separate from dialogue advance keys)
+  private interactKey!: Phaser.Input.Keyboard.Key;
+  private interactWasDown = false;
 
   constructor() {
     super({ key: 'OverworldScene' });
@@ -33,6 +51,14 @@ export class OverworldScene extends Phaser.Scene {
 
     this.playerController = new PlayerController(this);
     this.playerController.preload();
+
+    this.npcManager = new NPCManager(this);
+    this.npcManager.preload();
+
+    // Load dialogue JSON files
+    this.load.json('dialogue-claude-townsquare', '/assets/worlds/village/dialogue/claude-townsquare.json');
+    this.load.json('dialogue-signpost', '/assets/worlds/village/dialogue/signpost.json');
+    this.load.json('dialogue-villager-01', '/assets/worlds/village/dialogue/villager-01.json');
   }
 
   create(): void {
@@ -82,12 +108,149 @@ export class OverworldScene extends Phaser.Scene {
       }
     }
 
+    // NPC system
+    this.npcManager.create(this.worldLoader.tilemap, player);
+
+    // Dialogue box
+    this.dialogueBox = new DialogueBox(this);
+
+    // NPC interaction prompt (shown/hidden based on proximity)
+    this.npcPrompt = this.add.text(0, 0, 'Press SPACE to talk', {
+      fontSize: '10px',
+      color: '#ffffff',
+      backgroundColor: '#000000aa',
+      padding: { x: 4, y: 2 },
+      fontFamily: 'monospace'
+    });
+    this.npcPrompt.setOrigin(0.5);
+    this.npcPrompt.setDepth(100);
+    this.npcPrompt.setVisible(false);
+
+    // Separate interact key for starting conversations
+    this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
     this.transition.fadeIn();
   }
 
   override update(): void {
+    // Handle dialogue input when active
+    if (this.dialogueActive) {
+      this.dialogueBox.update();
+      return;
+    }
+
+    // Normal gameplay
     this.playerController.update();
     this.interactionSystem.update();
+
+    const player = this.playerController.sprite;
+    this.npcManager.update(player.x, player.y);
+
+    // NPC proximity check
+    const closestNPC = this.npcManager.getClosestNPC(player.x, player.y);
+    if (closestNPC && !this.dialogueActive) {
+      this.npcPrompt!.setPosition(closestNPC.x, closestNPC.y - 20);
+      this.npcPrompt!.setVisible(true);
+
+      // Check for interaction key press
+      const interactPressed = this.interactKey.isDown && !this.interactWasDown;
+      this.interactWasDown = this.interactKey.isDown;
+
+      if (interactPressed) {
+        this.startDialogue(closestNPC.dialogueId, closestNPC.name);
+      }
+    } else {
+      this.npcPrompt!.setVisible(false);
+      this.interactWasDown = this.interactKey.isDown;
+    }
+  }
+
+  private startDialogue(dialogueId: string, npcName: string): void {
+    const cacheKey = `dialogue-${dialogueId}`;
+    const data = this.cache.json.get(cacheKey) as DialogueTreeData | undefined;
+    if (!data) {
+      console.warn(`No dialogue data found for key: ${cacheKey}`);
+      return;
+    }
+
+    this.dialogueActive = true;
+    this.playerController.sprite.setVelocity(0);
+    this.currentDialogueTree = DialogueTree.fromJSON(data);
+
+    const startNode = this.currentDialogueTree.getStartNode();
+    if (!startNode) {
+      this.endDialogue();
+      return;
+    }
+
+    this.showDialogueNode(startNode);
+  }
+
+  private showDialogueNode(node: DialogueNode): void {
+    if (!this.currentDialogueTree) return;
+
+    const text = node.text;
+    const availableChoices = this.currentDialogueTree.getAvailableChoices(node, this.gameState);
+
+    // Process triggers
+    if (node.triggers) {
+      for (const trigger of node.triggers) {
+        if (trigger.type === 'setFlag' && trigger.data['flag']) {
+          this.gameState[trigger.data['flag'] as string] = true;
+        }
+      }
+    }
+
+    // Convert DialogueTree choices to DialogueBox choices
+    const boxChoices: DialogueChoice[] = availableChoices.map(c => ({
+      text: c.text,
+      nextNodeId: c.nextNodeId
+    }));
+
+    if (boxChoices.length > 0) {
+      // Node with choices
+      this.dialogueBox.show(
+        text,
+        node.speaker,
+        () => this.endDialogue(),
+        boxChoices,
+        (choice) => {
+          const nextNode = this.currentDialogueTree?.getNode(choice.nextNodeId);
+          if (nextNode) {
+            this.showDialogueNode(nextNode);
+          } else {
+            this.endDialogue();
+          }
+        }
+      );
+    } else if (node.nextNodeId) {
+      // Linear node — advance to next on completion
+      this.dialogueBox.show(
+        text,
+        node.speaker,
+        () => {
+          const nextNode = this.currentDialogueTree?.getNode(node.nextNodeId!);
+          if (nextNode) {
+            this.showDialogueNode(nextNode);
+          } else {
+            this.endDialogue();
+          }
+        }
+      );
+    } else {
+      // Terminal node
+      this.dialogueBox.show(
+        text,
+        node.speaker,
+        () => this.endDialogue()
+      );
+    }
+  }
+
+  private endDialogue(): void {
+    this.dialogueActive = false;
+    this.currentDialogueTree = null;
+    this.dialogueBox.hide();
   }
 
   private getDoorProperty(door: Phaser.Types.Tilemaps.TiledObject, name: string): string | undefined {

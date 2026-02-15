@@ -1,0 +1,41 @@
+{
+  "id": "signpost",
+  "startNodeId": "intro",
+  "nodes": [
+    {
+      "id": "intro",
+      "speaker": "Signpost",
+      "text": "Welcome, traveler! This sign will teach you the basics.",
+      "choices": [
+        { "text": "Show me the controls", "nextNodeId": "controls" },
+        { "text": "Any tips?", "nextNodeId": "tips" },
+        { "text": "I'm good, thanks", "nextNodeId": "done" }
+      ]
+    },
+    {
+      "id": "controls",
+      "speaker": "Signpost",
+      "text": [
+        "WASD or Arrow Keys - Move around the world",
+        "SPACE or ENTER - Talk to NPCs and interact with objects",
+        "ENTER near a door - Go inside buildings",
+        "ESC - Close menus and dialogue"
+      ],
+      "nextNodeId": "done"
+    },
+    {
+      "id": "tips",
+      "speaker": "Signpost",
+      "text": [
+        "Talk to the NPCs around town. Claude, the orange one, knows a lot about this place.",
+        "Not all doors lead somewhere yet. More buildings are coming soon!"
+      ],
+      "nextNodeId": "done"
+    },
+    {
+      "id": "done",
+      "speaker": "Signpost",
+      "text": "Good luck out there!"
+    }
+  ]
+}

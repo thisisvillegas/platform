@@ -1,0 +1,25 @@
+{
+  "id": "villager-01",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Villager",
+      "text": "Beautiful day, isn't it? This village runs on a Raspberry Pi, can you believe it?",
+      "choices": [
+        { "text": "That's pretty cool!", "nextNodeId": "cool" },
+        { "text": "What else is around here?", "nextNodeId": "hints" }
+      ]
+    },
+    {
+      "id": "cool",
+      "speaker": "Villager",
+      "text": "Right? 8 gigs of RAM keeping this whole world alive. Technology is something else."
+    },
+    {
+      "id": "hints",
+      "speaker": "Villager",
+      "text": "I heard Claude over in the town square knows everything about this place. And the tavern has some great... apps on the menu."
+    }
+  ]
+}

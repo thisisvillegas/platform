@@ -1,0 +1,66 @@
+{
+  "id": "claude-townsquare",
+  "startNodeId": "welcome",
+  "nodes": [
+    {
+      "id": "welcome",
+      "speaker": "Claude",
+      "text": "Hey there, welcome to the village! This might look like a game, but it's actually a portfolio in disguise.",
+      "choices": [
+        { "text": "Tell me more about this place", "nextNodeId": "about-world" },
+        { "text": "Who made this?", "nextNodeId": "about-creator" },
+        { "text": "Any tips for exploring?", "nextNodeId": "tips" },
+        { "text": "See you around!", "nextNodeId": "goodbye" }
+      ]
+    },
+    {
+      "id": "about-world",
+      "speaker": "Claude",
+      "text": [
+        "Each building you see here is a real app that Andres built. Walk up to a door and press Enter to go inside.",
+        "The tavern has info about all the apps. Think of them as drinks on the menu. I'm the bartender there too, by the way."
+      ],
+      "choices": [
+        { "text": "Who made this?", "nextNodeId": "about-creator" },
+        { "text": "Any tips?", "nextNodeId": "tips" },
+        { "text": "Cool, thanks!", "nextNodeId": "goodbye" }
+      ]
+    },
+    {
+      "id": "about-creator",
+      "speaker": "Claude",
+      "text": [
+        "Andres is a full-stack developer who loves building things that are a little unconventional.",
+        "He built this with Angular 19, Phaser 3 for the game engine, and Express on the backend. The whole thing runs on a Raspberry Pi."
+      ],
+      "choices": [
+        { "text": "A Raspberry Pi? Really?", "nextNodeId": "raspberry-pi" },
+        { "text": "Tell me about this place", "nextNodeId": "about-world" },
+        { "text": "Thanks!", "nextNodeId": "goodbye" }
+      ]
+    },
+    {
+      "id": "raspberry-pi",
+      "speaker": "Claude",
+      "text": "Yep! 8GB of RAM, running Debian. It handles the API, serves the frontend, and manages all the apps. Pretty wild for a $70 computer.",
+      "choices": [
+        { "text": "Any tips for exploring?", "nextNodeId": "tips" },
+        { "text": "That's impressive. See ya!", "nextNodeId": "goodbye" }
+      ]
+    },
+    {
+      "id": "tips",
+      "speaker": "Claude",
+      "text": [
+        "Try talking to everyone you meet. Some villagers drop hints about hidden secrets.",
+        "Look for glowing objects and signs. The signpost nearby has a controls tutorial if you need it."
+      ],
+      "nextNodeId": "goodbye"
+    },
+    {
+      "id": "goodbye",
+      "speaker": "Claude",
+      "text": "Have fun exploring! Come back anytime if you have questions."
+    }
+  ]
+}
