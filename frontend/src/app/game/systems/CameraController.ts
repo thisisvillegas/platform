@@ -18,13 +18,13 @@ export class CameraController {
     this.camera.startFollow(target, true, 0.1, 0.1);
   }
 
-  /** Cinematic arrival: starts at 1.0x, tweens to 2x over 1.5 seconds. */
+  /** Cinematic arrival: starts at 1.0x, tweens to 1.5x over 1.5 seconds. */
   playArrivalZoom(): void {
     this.camera.setZoom(1.0);
 
     this.scene.tweens.add({
       targets: this.camera,
-      zoom: 2,
+      zoom: 1.5,
       duration: 1500,
       ease: 'Cubic.easeOut'
     });
