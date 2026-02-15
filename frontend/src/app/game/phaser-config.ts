@@ -1,9 +1,13 @@
 import * as Phaser from 'phaser';
+import { CinematicScene } from './scenes/CinematicScene';
+import { DoorScene } from './scenes/DoorScene';
 import { LoadingScene } from './scenes/loading-scene';
 import { OverworldScene } from './scenes/OverworldScene';
 import { InteriorScene } from './scenes/InteriorScene';
 
-export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig {
+export function createPhaserConfig(parent: string, initialScene?: string): Phaser.Types.Core.GameConfig {
+  const scenes = [CinematicScene, DoorScene, LoadingScene, OverworldScene, InteriorScene];
+
   return {
     type: Phaser.AUTO,
     parent: parent,
@@ -12,7 +16,7 @@ export function createPhaserConfig(parent: string): Phaser.Types.Core.GameConfig
     pixelArt: true,
     roundPixels: true,
     backgroundColor: '#000000',
-    scene: [LoadingScene, OverworldScene, InteriorScene],
+    scene: scenes,
     physics: {
       default: 'arcade',
       arcade: {

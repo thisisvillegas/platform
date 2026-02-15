@@ -4,21 +4,28 @@ import { AuthGuard } from '@auth0/auth0-angular';
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: '/login',
-        pathMatch: 'full'
+        loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
+        title: 'Platform - Enter the Village'
     },
     {
         path: 'login',
         loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
     },
     {
+        path: 'projects',
+        loadComponent: () => import('./pages/projects/projects.component').then(m => m.ProjectsComponent),
+        title: 'Platform - Projects'
+    },
+    {
         path: 'door',
-        redirectTo: '/login',
-        pathMatch: 'full'
+        loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
+        data: { initialScene: 'DoorScene' },
+        title: 'Platform - Door'
     },
     {
         path: 'world',
         loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
+        data: { initialScene: 'LoadingScene' },
         title: 'Platform - World'
     },
     {
@@ -67,6 +74,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: '/login'
+        redirectTo: '/'
     }
 ];

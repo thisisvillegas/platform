@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, NgZone, Input } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import * as Phaser from 'phaser';
 import { createPhaserConfig } from './phaser-config';
 import { PhaserBridgeService } from './services/phaser-bridge.service';
@@ -12,20 +13,30 @@ import { WorldNavigationService } from './services/world-navigation.service';
   styleUrl: './game.component.scss'
 })
 export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input() initialScene: string = 'CinematicScene';
+
   private game?: Phaser.Game;
   isBootstrapping = true;
 
   constructor(
     private ngZone: NgZone,
     private phaserBridge: PhaserBridgeService,
-    private worldNavigation: WorldNavigationService
+    private worldNavigation: WorldNavigationService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Read initial scene from route data
+    const routeScene = this.route.snapshot.data['initialScene'];
+    if (routeScene) {
+      this.initialScene = routeScene;
+    }
+  }
 
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
-      const config = createPhaserConfig('game-container');
+      const config = createPhaserConfig('game-container', this.initialScene);
       this.game = new Phaser.Game(config);
 
       // Register navigation callback so Phaser scenes can trigger Angular routing
@@ -34,6 +45,13 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
       ) => {
         this.ngZone.run(() => {
           this.worldNavigation.navigateToApp(buildingId, playerX, playerY, route, isExternal);
+        });
+      });
+
+      // Register callback for navigating to projects page from DoorScene
+      this.game.registry.set('navigateToProjects', () => {
+        this.ngZone.run(() => {
+          this.router.navigate(['/projects']);
         });
       });
 

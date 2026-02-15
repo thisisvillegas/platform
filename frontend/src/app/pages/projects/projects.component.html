@@ -1,0 +1,34 @@
+<div class="projects-container">
+  <header class="projects-header">
+    <h1 class="title">PORTFOLIO APPS</h1>
+    <p class="subtitle">Explore my collection of web applications</p>
+    <a routerLink="/" class="back-link">← Back to entrance</a>
+  </header>
+
+  <div class="projects-grid">
+    <div
+      *ngFor="let project of projects"
+      class="project-card"
+      (click)="navigateToProject(project)"
+      [routerLink]="project.route || null"
+      [class.external]="!!project.externalUrl"
+    >
+      <div class="project-icon">{{ project.icon }}</div>
+      <h2 class="project-name">{{ project.name }}</h2>
+      <p class="project-description">{{ project.description }}</p>
+      <div class="project-link">
+        <span *ngIf="!project.externalUrl">Launch →</span>
+        <span *ngIf="project.externalUrl">Visit ↗</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="projects-footer">
+    <p>Built by Andres Villegas | Powered by Claude</p>
+    <div class="footer-links">
+      <a href="mailto:andres@thisisvillegas.com" target="_blank">Email</a>
+      <a href="https://linkedin.com/in/andresvillegas" target="_blank">LinkedIn</a>
+      <a href="https://github.com/thisisvillegas" target="_blank">GitHub</a>
+    </div>
+  </footer>
+</div>
