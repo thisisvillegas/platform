@@ -6,7 +6,18 @@ import { OverworldScene } from './scenes/OverworldScene';
 import { InteriorScene } from './scenes/InteriorScene';
 
 export function createPhaserConfig(parent: string, initialScene?: string): Phaser.Types.Core.GameConfig {
-  const scenes = [CinematicScene, DoorScene, LoadingScene, OverworldScene, InteriorScene];
+  const sceneMap: Record<string, typeof Phaser.Scene> = {
+    CinematicScene: CinematicScene as unknown as typeof Phaser.Scene,
+    DoorScene: DoorScene as unknown as typeof Phaser.Scene,
+    LoadingScene: LoadingScene as unknown as typeof Phaser.Scene,
+    OverworldScene: OverworldScene as unknown as typeof Phaser.Scene,
+    InteriorScene: InteriorScene as unknown as typeof Phaser.Scene,
+  };
+
+  // Put the desired initial scene first — Phaser 3 auto-starts the first scene in the array
+  const initial = sceneMap[initialScene ?? 'CinematicScene'] ?? CinematicScene;
+  const others = Object.values(sceneMap).filter(s => s !== initial);
+  const scenes = [initial, ...others];
 
   return {
     type: Phaser.AUTO,

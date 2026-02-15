@@ -69,7 +69,7 @@ export class CollectiblesPanel {
     }).setOrigin(0.5);
 
     // Close hint
-    const closeHint = this.scene.add.text(0, -panelHeight / 2 + 55, 'Press TAB or ESC to close', {
+    const closeHint = this.scene.add.text(0, -panelHeight / 2 + 55, 'Press C or ESC to close', {
       fontSize: '10px',
       color: '#888888',
       fontFamily: 'monospace'
@@ -87,8 +87,9 @@ export class CollectiblesPanel {
     });
     yOffset += 25;
 
-    // List collected fragments (titles only, max 5 visible)
-    const maxVisible = 5;
+    // List collected fragments (clickable to re-read code)
+    const collectibleItems: Phaser.GameObjects.GameObject[] = [];
+    const maxVisible = 8;
     const toShow = data.collectibles.found.slice(0, maxVisible);
     for (const collectible of toShow) {
       const item = this.scene.add.text(-panelWidth / 2 + 30, yOffset, `✓ ${collectible.title}`, {
@@ -96,6 +97,14 @@ export class CollectiblesPanel {
         color: '#00ff00',
         fontFamily: 'monospace'
       });
+      item.setInteractive({ useHandCursor: true });
+      item.on('pointerover', () => item.setColor('#00ffff'));
+      item.on('pointerout', () => item.setColor('#00ff00'));
+      item.on('pointerdown', () => {
+        this.hide();
+        this.scene.events.emit('collectible-view', collectible);
+      });
+      collectibleItems.push(item);
       yOffset += 18;
     }
 
@@ -106,6 +115,7 @@ export class CollectiblesPanel {
         fontFamily: 'monospace',
         fontStyle: 'italic'
       });
+      collectibleItems.push(more);
       yOffset += 18;
     }
 
@@ -194,6 +204,7 @@ export class CollectiblesPanel {
       title,
       closeHint,
       collectiblesTitle,
+      ...collectibleItems,
       achievementsTitle,
       statsTitle,
       buildingStat,

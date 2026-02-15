@@ -73,6 +73,11 @@ export class OverworldScene extends Phaser.Scene {
   private interactKey!: Phaser.Input.Keyboard.Key;
   private interactWasDown = false;
 
+  // Stored handler references for cleanup on shutdown
+  private beforeUnloadHandler: (() => void) | null = null;
+  private konamiHandler: ((event: KeyboardEvent) => void) | null = null;
+  private achievementHandler: ((achievement: any) => void) | null = null;
+
   constructor() {
     super({ key: 'OverworldScene' });
   }
@@ -101,6 +106,13 @@ export class OverworldScene extends Phaser.Scene {
     this.load.json('dialogue-claude-townsquare', '/assets/worlds/village/dialogue/claude-townsquare.json');
     this.load.json('dialogue-signpost', '/assets/worlds/village/dialogue/signpost.json');
     this.load.json('dialogue-villager-01', '/assets/worlds/village/dialogue/villager-01.json');
+
+    // Load audio assets
+    const audioBase = '/assets/worlds/village/audio';
+    this.load.audio('ambient', `${audioBase}/ambient.wav`);
+    this.load.audio('door-enter', `${audioBase}/door-enter.wav`);
+    this.load.audio('npc-talk', `${audioBase}/npc-talk.wav`);
+    this.load.audio('collectible-pickup', `${audioBase}/collectible-pickup.wav`);
   }
 
   create(): void {
@@ -230,6 +242,11 @@ export class OverworldScene extends Phaser.Scene {
     this.collectiblesPanel = new CollectiblesPanel(this);
     this.initializeAchievements();
 
+    // Listen for collectible re-view requests from panel
+    this.events.on('collectible-view', (collectible: Collectible) => {
+      this.showCodeModal(collectible);
+    });
+
     // Theme Engine: auto-detect day/night from local time
     this.themeEngine = new ThemeEngine(this, '/assets/worlds/village');
     this.initializeTheme();
@@ -247,16 +264,110 @@ export class OverworldScene extends Phaser.Scene {
     this.themeToggleButton.setInteractive({ useHandCursor: true });
     this.themeToggleButton.on('pointerdown', () => this.toggleTheme());
 
+    // Tooltip for theme toggle
+    const themeTooltip = this.add.text(0, 0, 'Change theme', {
+      fontSize: '10px',
+      color: '#ffffff',
+      backgroundColor: '#000000cc',
+      padding: { x: 6, y: 3 },
+      fontFamily: 'monospace'
+    });
+    themeTooltip.setOrigin(1, 0);
+    themeTooltip.setScrollFactor(0);
+    themeTooltip.setDepth(1001);
+    themeTooltip.setVisible(false);
+    this.themeToggleButton.on('pointerover', () => {
+      themeTooltip.setPosition(this.themeToggleButton.x, this.themeToggleButton.y + 34);
+      themeTooltip.setVisible(true);
+    });
+    this.themeToggleButton.on('pointerout', () => themeTooltip.setVisible(false));
+
     // Handle canvas resize for UI elements
     this.scale.on('resize', this.handleResize, this);
     this.handleResize();
 
     this.transition.fadeIn();
+
+    // Onboarding: show 3-step tooltip on first spawn
+    if (!localStorage.getItem('onboardingCompleted')) {
+      this.showOnboarding();
+    }
+  }
+
+  private showOnboarding(): void {
+    const steps = [
+      'Use WASD or arrow keys to move',
+      'Walk to NPCs and press SPACE to talk',
+      'Explore buildings by walking to doors'
+    ];
+
+    const camera = this.cameras.main;
+    let stepIndex = 0;
+
+    const container = this.add.container(camera.width / 2, camera.height - 60);
+    container.setScrollFactor(0);
+    container.setDepth(3000);
+
+    const bg = this.add.rectangle(0, 0, 340, 40, 0x000000, 0.85);
+    bg.setStrokeStyle(1, 0x00ffff, 0.6);
+    const label = this.add.text(0, 0, steps[0], {
+      fontSize: '13px',
+      color: '#00ffcc',
+      fontFamily: 'monospace',
+      align: 'center'
+    }).setOrigin(0.5);
+    const hint = this.add.text(0, 18, 'press any key to continue', {
+      fontSize: '9px',
+      color: '#666688',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5);
+    container.add([bg, label, hint]);
+
+    // Gentle pulse
+    this.tweens.add({
+      targets: container,
+      alpha: { from: 0, to: 1 },
+      duration: 400,
+      ease: 'Sine.easeIn'
+    });
+
+    const advance = () => {
+      stepIndex++;
+      if (stepIndex >= steps.length) {
+        // Onboarding complete
+        container.destroy();
+        localStorage.setItem('onboardingCompleted', '1');
+        this.input.keyboard!.off('keydown', advance);
+        return;
+      }
+      label.setText(steps[stepIndex]);
+      // Brief flash effect on advance
+      this.tweens.add({
+        targets: label,
+        alpha: { from: 0.3, to: 1 },
+        duration: 200
+      });
+    };
+
+    this.input.keyboard!.on('keydown', advance);
+
+    // Auto-advance fallback: 4 seconds per step
+    let autoTimer: Phaser.Time.TimerEvent;
+    const scheduleAuto = () => {
+      autoTimer = this.time.delayedCall(4000, () => {
+        advance();
+        if (stepIndex < steps.length) {
+          scheduleAuto();
+        }
+      });
+    };
+    scheduleAuto();
   }
 
   private handleResize(): void {
     const camera = this.cameras.main;
-    this.themeToggleButton.setPosition(camera.width - 10, 10);
+    // Theme toggle sits below the audio mute button (audio is at y=20, ~40px tall)
+    this.themeToggleButton.setPosition(camera.width - 10, 60);
     this.audioControls.resize(camera.width, camera.height);
   }
 
@@ -421,19 +532,22 @@ export class OverworldScene extends Phaser.Scene {
     // Load saved progress
     await this.loadProgress();
 
-    // Listen for achievement unlocks
-    this.achievementEngine.on('achievement-unlocked', (achievement: any) => {
+    // Listen for achievement unlocks (store ref for cleanup)
+    this.achievementHandler = (achievement: any) => {
       this.achievementToast.show(achievement);
+    };
+    this.achievementEngine.on('achievement-unlocked', this.achievementHandler);
+
+    // C key for collectibles panel (avoids hijacking TAB for accessibility)
+    const collectiblesKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+    collectiblesKey.on('down', () => {
+      if (!this.dialogueActive && !this.codeModal) {
+        this.toggleCollectiblesPanel();
+      }
     });
 
-    // Tab key for collectibles panel
-    const tabKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
-    tabKey.on('down', () => {
-      this.toggleCollectiblesPanel();
-    });
-
-    // Konami code detection
-    this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
+    // Konami code detection (store ref for cleanup)
+    this.konamiHandler = (event: KeyboardEvent) => {
       const key = event.key.toUpperCase();
       const keyMap: Record<string, string> = {
         'ARROWUP': 'UP',
@@ -457,7 +571,8 @@ export class OverworldScene extends Phaser.Scene {
           this.triggerKonamiEffect();
         }
       }
-    });
+    };
+    this.input.keyboard!.on('keydown', this.konamiHandler);
 
     // Setup auto-save on beforeunload
     this.setupAutoSave();
@@ -529,6 +644,9 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   override update(): void {
+    // Theme particles must track camera every frame regardless of dialogue state
+    this.themeEngine?.update();
+
     // Handle dialogue input when active or modal is open
     if (this.dialogueActive || this.codeModal) {
       if (this.dialogueActive) {
@@ -774,7 +892,9 @@ export class OverworldScene extends Phaser.Scene {
         body: JSON.stringify(progressData)
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        this.showSaveToast();
+      } else {
         console.warn('Failed to save progress:', response.status);
       }
     } catch (error) {
@@ -782,10 +902,71 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
-  private setupAutoSave(): void {
-    // Save progress when leaving the page
-    window.addEventListener('beforeunload', () => {
-      this.saveProgress();
+  private showSaveToast(): void {
+    const camera = this.cameras.main;
+    const toast = this.add.text(camera.width / 2, camera.height - 30, '✓ Progress saved', {
+      fontSize: '11px',
+      color: '#00ff00',
+      backgroundColor: '#000000cc',
+      padding: { x: 8, y: 4 },
+      fontFamily: 'monospace'
     });
+    toast.setOrigin(0.5);
+    toast.setScrollFactor(0);
+    toast.setDepth(3000);
+    toast.setAlpha(0);
+
+    this.tweens.add({
+      targets: toast,
+      alpha: 1,
+      duration: 300,
+      yoyo: true,
+      hold: 1500,
+      onComplete: () => toast.destroy()
+    });
+  }
+
+  private setupAutoSave(): void {
+    // Save progress when leaving the page (store ref for cleanup)
+    this.beforeUnloadHandler = () => {
+      this.saveProgress();
+    };
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
+  }
+
+  /** Clean up all external listeners when the scene shuts down or restarts. */
+  shutdown(): void {
+    // Remove window-level listener
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+      this.beforeUnloadHandler = null;
+    }
+
+    // Remove Konami keyboard listener
+    if (this.konamiHandler) {
+      this.input.keyboard?.off('keydown', this.konamiHandler);
+      this.konamiHandler = null;
+    }
+
+    // Remove AchievementEngine EventEmitter listener
+    if (this.achievementHandler) {
+      this.achievementEngine?.off('achievement-unlocked', this.achievementHandler);
+      this.achievementHandler = null;
+    }
+
+    // Remove scale resize listener
+    this.scale.off('resize', this.handleResize, this);
+
+    // Remove collectible-view event
+    this.events.off('collectible-view');
+
+    // Clean up ThemeEngine (its own resize handler + particles + audio)
+    this.themeEngine?.destroy();
+
+    // Close any open modal
+    this.closeCodeModal();
+
+    // Final progress save
+    this.saveProgress();
   }
 }

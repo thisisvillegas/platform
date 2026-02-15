@@ -46,7 +46,7 @@ export class ProjectsComponent {
     {
       name: 'GIF Gallery',
       description: 'Personal collection of GIFs and animated media.',
-      externalUrl: 'https://gif.thisisvillegas.com',
+      externalUrl: 'https://media.thisisvillegas.com',
       icon: '🎬'
     },
     {

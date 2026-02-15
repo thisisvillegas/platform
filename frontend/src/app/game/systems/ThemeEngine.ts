@@ -10,6 +10,7 @@ export class ThemeEngine {
   private particleEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private activeDecorationLayers: string[] = [];
   private overlay: Phaser.GameObjects.Rectangle | null = null;
+  private overlayResizeHandler: (() => void) | null = null;
 
   constructor(scene: Phaser.Scene, worldPackPath: string) {
     this.scene = scene;
@@ -44,6 +45,12 @@ export class ThemeEngine {
       this.overlay = null;
     }
 
+    // Remove old overlay resize handler before adding a new one
+    if (this.overlayResizeHandler) {
+      this.scene.scale.off('resize', this.overlayResizeHandler);
+      this.overlayResizeHandler = null;
+    }
+
     // Create new overlay if specified
     if (theme.palette.overlay) {
       const overlayData = theme.palette.overlay;
@@ -59,12 +66,13 @@ export class ThemeEngine {
       this.overlay.setScrollFactor(0);
       this.overlay.setDepth(500); // Above game world, below UI
 
-      // Update overlay size on camera resize
-      this.scene.scale.on('resize', () => {
+      // Update overlay size on camera resize (stored for cleanup)
+      this.overlayResizeHandler = () => {
         if (this.overlay) {
           this.overlay.setSize(camera.width, camera.height);
         }
-      });
+      };
+      this.scene.scale.on('resize', this.overlayResizeHandler);
     }
 
     // Handle particles
@@ -247,6 +255,15 @@ export class ThemeEngine {
     }
   }
 
+  /** Reposition particle emitter to follow the camera viewport in world space. Call every frame. */
+  update(): void {
+    if (this.particleEmitter) {
+      const camera = this.scene.cameras.main;
+      // Move emitter to camera's world position so particles cover the viewport
+      this.particleEmitter.setPosition(camera.scrollX, camera.scrollY);
+    }
+  }
+
   getCurrentTheme(): Theme | null {
     return this.currentTheme;
   }
@@ -261,7 +278,12 @@ export class ThemeEngine {
   }
 
   destroy(): void {
-    // Clean up resources
+    // Clean up resize handler
+    if (this.overlayResizeHandler) {
+      this.scene.scale.off('resize', this.overlayResizeHandler);
+      this.overlayResizeHandler = null;
+    }
+
     if (this.overlay) {
       this.overlay.destroy();
     }
