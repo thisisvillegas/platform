@@ -176,6 +176,9 @@ export class CinematicScene extends Phaser.Scene {
   }
 
   private handleResize(gameSize: Phaser.Structs.Size): void {
+    // Guard against resize events after scene shutdown
+    if (!this.scene || !this.scene.isActive()) return;
+
     const width = gameSize.width;
     const height = gameSize.height;
 
