@@ -212,12 +212,12 @@ export class DoorScene extends Phaser.Scene {
 
       const data = await response.json();
 
-      if (data.valid && data.token) {
+      if (response.ok && data.token) {
         // Store JWT and transition to game
         localStorage.setItem('guest_token', data.token);
         this.onValidCode();
       } else {
-        this.onInvalidCode(data.error || 'Invalid code');
+        this.onInvalidCode(data.message || data.error || 'Invalid code');
       }
     } catch (error) {
       this.showError('Network error. Please try again.');
