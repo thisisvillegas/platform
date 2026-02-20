@@ -8,6 +8,9 @@ export class CinematicScene extends Phaser.Scene {
   private enterButton!: Phaser.GameObjects.Container;
   private enterButtonBg!: Phaser.GameObjects.Rectangle;
   private enterButtonText!: Phaser.GameObjects.Text;
+  private skipButton!: Phaser.GameObjects.Container;
+  private skipButtonBg!: Phaser.GameObjects.Rectangle;
+  private skipButtonText!: Phaser.GameObjects.Text;
 
   private fullText = 'This isn\'t a normal portfolio site.\n\nNo grid of project cards. No "download my resume" button. Instead, you\'re about to walk into a pixel-art village where every building is an app I actually built.\n\nTalk to the NPCs — they\'re weirdly helpful for 16-pixel beings. Find the hidden code fragments. Unlock achievements, because apparently I can\'t ship anything without a progression system.\n\nWander wherever you want. There\'s no wrong way to explore.\n\nReady?';
   private currentCharIndex = 0;
@@ -78,8 +81,80 @@ export class CinematicScene extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
+    // Create skip button (appears immediately in top-right)
+    this.createSkipButton();
+
     // Handle window resize
     this.scale.on('resize', this.handleResize, this);
+  }
+
+  private createSkipButton(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const isSmall = width < 500;
+
+    // Position in top-right corner with padding
+    const xPos = width - (isSmall ? 60 : 80);
+    const yPos = isSmall ? 30 : 40;
+
+    // Create button container
+    this.skipButton = this.add.container(xPos, yPos);
+
+    // Button background (subtle, semi-transparent)
+    this.skipButtonBg = this.add.rectangle(
+      0,
+      0,
+      isSmall ? 80 : 100,
+      isSmall ? 35 : 40,
+      0x00ffff,
+      0.15
+    );
+    this.skipButtonBg.setStrokeStyle(1, 0x00ffff, 0.4);
+
+    // Button text
+    this.skipButtonText = this.add.text(0, 0, 'SKIP ⏭', {
+      fontSize: isSmall ? '11px' : '13px',
+      color: '#00ffff',
+      fontFamily: 'monospace'
+    }).setOrigin(0.5).setAlpha(0.7);
+
+    this.skipButton.add([this.skipButtonBg, this.skipButtonText]);
+    this.skipButton.setDepth(100); // Above other elements
+
+    // Make button interactive
+    this.skipButtonBg.setInteractive({ useHandCursor: true });
+
+    // Hover effects
+    this.skipButtonBg.on('pointerover', () => {
+      this.skipButtonBg.setFillStyle(0x00ffff, 0.3);
+      this.skipButtonText.setAlpha(1);
+    });
+
+    this.skipButtonBg.on('pointerout', () => {
+      this.skipButtonBg.setFillStyle(0x00ffff, 0.15);
+      this.skipButtonText.setAlpha(0.7);
+    });
+
+    // Click/tap handler - skip to world
+    this.skipButtonBg.on('pointerdown', () => {
+      this.skipCinematic();
+    });
+  }
+
+  private skipCinematic(): void {
+    // Stop typewriter if it's running
+    if (this.typewriterTimer) {
+      this.typewriterTimer.destroy();
+      this.typewriterTimer = undefined;
+    }
+
+    // Hide skip button
+    if (this.skipButton) {
+      this.skipButton.setVisible(false);
+    }
+
+    // Transition immediately to world
+    this.transitionToWorld();
   }
 
   private startTypewriter(): void {
@@ -216,6 +291,7 @@ export class CinematicScene extends Phaser.Scene {
 
     const width = gameSize.width;
     const height = gameSize.height;
+    const isSmall = width < 500;
 
     // Reposition elements on resize
     if (this.typewriterText) {
@@ -229,6 +305,12 @@ export class CinematicScene extends Phaser.Scene {
 
     if (this.fadeOverlay) {
       this.fadeOverlay.setSize(width, height);
+    }
+
+    if (this.skipButton) {
+      const xPos = width - (isSmall ? 60 : 80);
+      const yPos = isSmall ? 30 : 40;
+      this.skipButton.setPosition(xPos, yPos);
     }
   }
 
