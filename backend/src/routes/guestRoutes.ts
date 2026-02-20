@@ -1,9 +1,38 @@
 import express, { Request, Response } from 'express';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import Guest from '../models/Guest';
 import { guestJwtCheck } from '../middleware/guestAuth';
 
 const router = express.Router();
+
+// POST /api/guest/auto - Auto-provision anonymous guest (public, no auth)
+router.post('/auto', async (req: Request, res: Response) => {
+  try {
+    const guestSecret = process.env.GUEST_JWT_SECRET;
+    if (!guestSecret) {
+      throw new Error('GUEST_JWT_SECRET not configured');
+    }
+
+    // Generate a unique anonymous pass code
+    const anonId = `anon-${crypto.randomBytes(6).toString('hex')}`;
+
+    const token = jwt.sign(
+      {
+        role: 'guest',
+        passCode: anonId,
+        passLabel: 'Anonymous Visitor'
+      },
+      guestSecret,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    console.error('Error creating auto guest:', error);
+    res.status(500).json({ error: 'Failed to create guest session' });
+  }
+});
 
 // Helper: Generate unique guest username
 async function generateGuestUsername(passCode: string): Promise<string> {

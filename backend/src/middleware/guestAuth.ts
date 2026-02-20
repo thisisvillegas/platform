@@ -47,27 +47,30 @@ export const guestJwtCheck = async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    // Verify the pass is still active (not revoked or expired)
-    const pass = await Pass.findOne({ code: decoded.passCode });
-    if (!pass) {
-      return res.status(401).json({
-        error: 'Pass not found',
-        message: 'The access code associated with this token no longer exists'
-      });
-    }
+    // Anonymous auto-guests bypass pass verification (no pass in DB)
+    if (!decoded.passCode.startsWith('anon-')) {
+      // Verify the pass is still active (not revoked or expired)
+      const pass = await Pass.findOne({ code: decoded.passCode });
+      if (!pass) {
+        return res.status(401).json({
+          error: 'Pass not found',
+          message: 'The access code associated with this token no longer exists'
+        });
+      }
 
-    if (pass.revokedAt) {
-      return res.status(403).json({
-        error: 'Pass revoked',
-        message: 'This access code has been revoked'
-      });
-    }
+      if (pass.revokedAt) {
+        return res.status(403).json({
+          error: 'Pass revoked',
+          message: 'This access code has been revoked'
+        });
+      }
 
-    if (pass.expiresAt < new Date()) {
-      return res.status(403).json({
-        error: 'Pass expired',
-        message: 'This access code has expired'
-      });
+      if (pass.expiresAt < new Date()) {
+        return res.status(403).json({
+          error: 'Pass expired',
+          message: 'This access code has expired'
+        });
+      }
     }
 
     // Attach guest context to request

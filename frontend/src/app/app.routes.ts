@@ -28,12 +28,6 @@ export const routes: Routes = [
         title: 'Platform - Projects'
     },
     {
-        path: 'door',
-        loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
-        data: { initialScene: 'DoorScene' },
-        title: 'Platform - Door'
-    },
-    {
         path: 'world',
         loadComponent: () => import('./game/game.component').then(m => m.GameComponent),
         data: { initialScene: 'LoadingScene' },

@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { environment } from '../../../environments/environment';
 
 export class CinematicScene extends Phaser.Scene {
   private fadeOverlay!: Phaser.GameObjects.Rectangle;
@@ -146,19 +147,19 @@ export class CinematicScene extends Phaser.Scene {
       this.enterButtonText.setScale(1.0);
     });
 
-    // Click handler - transition to DoorScene
+    // Click handler - transition to game world
     this.enterButtonBg.on('pointerdown', () => {
-      this.transitionToDoorScene();
+      this.transitionToWorld();
     });
 
     // Keyboard Enter/Space handler
     const enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     const spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    enterKey.once('down', () => this.transitionToDoorScene());
-    spaceKey.once('down', () => this.transitionToDoorScene());
+    enterKey.once('down', () => this.transitionToWorld());
+    spaceKey.once('down', () => this.transitionToWorld());
   }
 
-  private transitionToDoorScene(): void {
+  private transitionToWorld(): void {
     if (this.isTransitioning) return;
     this.isTransitioning = true;
 
@@ -180,9 +181,30 @@ export class CinematicScene extends Phaser.Scene {
       duration: 1000,
       ease: 'Power2',
       onComplete: () => {
-        this.scene.start('DoorScene');
+        this.provisionGuestAndStart();
       }
     });
+  }
+
+  private async provisionGuestAndStart(): Promise<void> {
+    try {
+      // Auto-provision anonymous guest token
+      const response = await fetch(`${environment.apiUrl}/api/guest/auto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('guest_token', data.token);
+        }
+      }
+    } catch {
+      // Continue without token — game works, progress just won't save
+    }
+
+    this.scene.start('LoadingScene');
   }
 
   private handleResize(gameSize: Phaser.Structs.Size): void {

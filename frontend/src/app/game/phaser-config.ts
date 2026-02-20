@@ -1,6 +1,5 @@
 import * as Phaser from 'phaser';
 import { CinematicScene } from './scenes/CinematicScene';
-import { DoorScene } from './scenes/DoorScene';
 import { LoadingScene } from './scenes/loading-scene';
 import { OverworldScene } from './scenes/OverworldScene';
 import { InteriorScene } from './scenes/InteriorScene';
@@ -8,7 +7,6 @@ import { InteriorScene } from './scenes/InteriorScene';
 export function createPhaserConfig(parent: string, initialScene?: string): Phaser.Types.Core.GameConfig {
   const sceneMap: Record<string, typeof Phaser.Scene> = {
     CinematicScene: CinematicScene as unknown as typeof Phaser.Scene,
-    DoorScene: DoorScene as unknown as typeof Phaser.Scene,
     LoadingScene: LoadingScene as unknown as typeof Phaser.Scene,
     OverworldScene: OverworldScene as unknown as typeof Phaser.Scene,
     InteriorScene: InteriorScene as unknown as typeof Phaser.Scene,
