@@ -6,4 +6,11 @@
       <div class="loading-text">INITIALIZING...</div>
     </div>
   }
+  @if (showLandscapePrompt) {
+    <div class="landscape-prompt" (click)="requestFullscreen()">
+      <div class="rotate-icon">📱</div>
+      <div class="rotate-message">Rotate your device to landscape</div>
+      <div class="rotate-hint">Tap to go fullscreen</div>
+    </div>
+  }
 </div>

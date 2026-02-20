@@ -18,6 +18,10 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private game?: Phaser.Game;
   isBootstrapping = true;
+  showLandscapePrompt = false;
+  private orientationQuery?: MediaQueryList;
+  private orientationHandler?: (e: MediaQueryListEvent) => void;
+  private isMobile = false;
 
   constructor(
     private ngZone: NgZone,
@@ -33,6 +37,14 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
     const routeScene = this.route.snapshot.data['initialScene'];
     if (routeScene) {
       this.initialScene = routeScene;
+    }
+
+    // Detect mobile via touch capability + small screen
+    this.isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+      && window.innerWidth < 1024;
+
+    if (this.isMobile) {
+      this.setupOrientationPrompt();
     }
   }
 
@@ -76,10 +88,43 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /** Show overlay when mobile is in portrait; auto-dismiss on landscape. */
+  private setupOrientationPrompt(): void {
+    this.orientationQuery = window.matchMedia('(orientation: portrait)');
+    this.showLandscapePrompt = this.orientationQuery.matches;
+
+    this.orientationHandler = (e: MediaQueryListEvent) => {
+      this.ngZone.run(() => {
+        this.showLandscapePrompt = e.matches;
+      });
+    };
+    this.orientationQuery.addEventListener('change', this.orientationHandler);
+  }
+
+  /** Request fullscreen on mobile (called from the landscape prompt tap). */
+  requestFullscreen(): void {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if ((elem as any).webkitRequestFullscreen) {
+      (elem as any).webkitRequestFullscreen();
+    }
+
+    // Also try to lock to landscape if the API is available
+    try {
+      (screen.orientation as any)?.lock?.('landscape').catch(() => {});
+    } catch { /* not supported — ignore */ }
+  }
+
   ngOnDestroy(): void {
     if (this.game) {
       this.game.destroy(true, false);
       this.game = undefined;
+    }
+
+    // Clean up orientation listener
+    if (this.orientationQuery && this.orientationHandler) {
+      this.orientationQuery.removeEventListener('change', this.orientationHandler);
     }
 
     // Clean up any orphaned canvas elements
