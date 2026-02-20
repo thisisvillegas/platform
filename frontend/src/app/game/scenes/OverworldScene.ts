@@ -56,6 +56,8 @@ export class OverworldScene extends Phaser.Scene {
   private konamiTarget = ['UP', 'UP', 'DOWN', 'DOWN', 'LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'B', 'A'];
   private panelOpened = false;
   private lastAutoSave = 0;
+  private achievementsReady = false;
+  private lastAchievementCheckTime = 0;
 
   // Public tilemap for ThemeEngine decoration layer access
   public tilemap!: Phaser.Tilemaps.Tilemap;
@@ -309,6 +311,9 @@ export class OverworldScene extends Phaser.Scene {
 
     this.transition.fadeIn();
 
+    // Bind shutdown to Phaser's scene lifecycle so cleanup actually runs
+    this.events.once('shutdown', this.shutdown, this);
+
     // Sync Angular URL to /world so browser back doesn't replay the cinematic
     const syncUrl = this.game.registry.get('syncWorldUrl') as (() => void) | undefined;
     if (syncUrl) syncUrl();
@@ -545,15 +550,21 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private async initializeAchievements(): Promise<void> {
+    this.achievementsReady = false;
     await this.achievementEngine.loadAchievements();
     this.sessionStartTime = Date.now();
 
-    // Load saved progress
+    // Load saved progress (server first, localStorage fallback)
     await this.loadProgress();
+
+    // Mark achievements as ready AFTER progress is loaded — prevents re-triggering
+    this.achievementsReady = true;
 
     // Listen for achievement unlocks (store ref for cleanup)
     this.achievementHandler = (achievement: any) => {
       this.achievementToast.show(achievement);
+      // Persist immediately on unlock so it's never lost
+      this.saveProgressLocal();
     };
     this.achievementEngine.on('achievement-unlocked', this.achievementHandler);
 
@@ -660,6 +671,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private checkAchievements(): void {
+    if (!this.achievementsReady) return; // Don't check until progress is loaded
     const state = this.getGameState();
     this.achievementEngine.checkAll(state);
   }
@@ -732,8 +744,9 @@ export class OverworldScene extends Phaser.Scene {
       return; // Don't check NPC interaction when picking up collectible
     }
 
-    // Time-based achievement check (every second)
-    if (this.time.now % 1000 < 16) { // Approximately every second
+    // Time-based achievement check (every 2 seconds, using elapsed delta)
+    if (this.time.now - this.lastAchievementCheckTime > 2000) {
+      this.lastAchievementCheckTime = this.time.now;
       this.checkAchievements();
     }
 
@@ -879,76 +892,105 @@ export class OverworldScene extends Phaser.Scene {
     return prop?.value as string | undefined;
   }
 
-  private async loadProgress(): Promise<void> {
-    const token = localStorage.getItem('guest_token');
-    if (!token) {
-      console.log('No guest token, skipping progress load');
-      return;
+  private applyProgressData(p: Record<string, unknown>): void {
+    // Restore collectibles
+    if (p['collectibles'] && Array.isArray(p['collectibles'])) {
+      this.secretsManager.setCollected(p['collectibles'] as string[]);
     }
 
-    try {
-      const response = await fetch(`${environment.apiUrl}/api/world/progress`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    // Restore achievements
+    if (p['achievements'] && Array.isArray(p['achievements'])) {
+      this.achievementEngine.setUnlocked(p['achievements'] as string[]);
+    }
 
-      if (!response.ok) {
-        console.warn('Failed to load progress:', response.status);
-        return;
-      }
-
-      const data = await response.json();
-      if (data.success && data.progress) {
-        const p = data.progress;
-
-        // Restore collectibles
-        if (p.collectibles && Array.isArray(p.collectibles)) {
-          this.secretsManager.setCollected(p.collectibles);
-        }
-
-        // Restore achievements
-        if (p.achievements && Array.isArray(p.achievements)) {
-          this.achievementEngine.setUnlocked(p.achievements);
-        }
-
-        // Restore tracking data
-        if (p.buildingsVisited && Array.isArray(p.buildingsVisited)) {
-          this.buildingsVisited = new Set(p.buildingsVisited);
-        }
-        if (p.npcsInteracted && Array.isArray(p.npcsInteracted)) {
-          this.npcsInteracted = new Set(p.npcsInteracted);
-        }
-        if (typeof p.dialogueCount === 'number') {
-          this.dialogueCountTotal = p.dialogueCount;
-        }
-        if (typeof p.timeSpent === 'number') {
-          this.timeSpentTotal = p.timeSpent;
-        }
-
-        console.log('Progress loaded successfully');
-      }
-    } catch (error) {
-      console.error('Error loading progress:', error);
+    // Restore tracking data
+    if (p['buildingsVisited'] && Array.isArray(p['buildingsVisited'])) {
+      this.buildingsVisited = new Set(p['buildingsVisited'] as string[]);
+    }
+    if (p['npcsInteracted'] && Array.isArray(p['npcsInteracted'])) {
+      this.npcsInteracted = new Set(p['npcsInteracted'] as string[]);
+    }
+    if (typeof p['dialogueCount'] === 'number') {
+      this.dialogueCountTotal = p['dialogueCount'];
+    }
+    if (typeof p['timeSpent'] === 'number') {
+      this.timeSpentTotal = p['timeSpent'];
+    }
+    if (typeof p['panelOpened'] === 'boolean') {
+      this.panelOpened = p['panelOpened'];
     }
   }
 
-  private async saveProgress(): Promise<void> {
+  private async loadProgress(): Promise<void> {
     const token = localStorage.getItem('guest_token');
-    if (!token) {
-      return; // Silent fail if no token
+
+    // Try server first if we have a token
+    if (token) {
+      try {
+        const response = await fetch(`${environment.apiUrl}/api/world/progress`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.progress) {
+            this.applyProgressData(data.progress);
+            console.log('Progress loaded from server');
+            return;
+          }
+        } else {
+          console.warn('Failed to load progress from server:', response.status);
+        }
+      } catch (error) {
+        console.error('Error loading server progress:', error);
+      }
     }
 
+    // Fallback: load from localStorage
+    try {
+      const saved = localStorage.getItem('worldProgress');
+      if (saved) {
+        const p = JSON.parse(saved);
+        this.applyProgressData(p);
+        console.log('Progress loaded from localStorage');
+      }
+    } catch (error) {
+      console.error('Error loading localStorage progress:', error);
+    }
+  }
+
+  private getProgressData(): Record<string, unknown> {
     const player = this.playerController.sprite;
-    const progressData = {
+    return {
       collectibles: this.secretsManager.getCollected(),
       achievements: this.achievementEngine.getUnlocked(),
       buildingsVisited: Array.from(this.buildingsVisited),
       npcsInteracted: Array.from(this.npcsInteracted),
       dialogueCount: this.dialogueCountTotal,
       timeSpent: this.getTimeSpent(),
+      panelOpened: this.panelOpened,
       lastPosition: { x: Math.round(player.x), y: Math.round(player.y) }
     };
+  }
+
+  /** Save progress to localStorage (synchronous, always available). */
+  private saveProgressLocal(): void {
+    try {
+      localStorage.setItem('worldProgress', JSON.stringify(this.getProgressData()));
+    } catch { /* quota exceeded or private browsing — ignore */ }
+  }
+
+  private async saveProgress(): Promise<void> {
+    const progressData = this.getProgressData();
+
+    // Always persist to localStorage as a reliable fallback
+    this.saveProgressLocal();
+
+    // Also persist to server if we have a guest token
+    const token = localStorage.getItem('guest_token');
+    if (!token) return;
 
     try {
       const response = await fetch(`${environment.apiUrl}/api/world/progress`, {
