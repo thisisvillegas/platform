@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware: CORS restricted to known origins
 const allowedOrigins = [
     'https://platform.thisisvillegas.com',
+    'https://thisisvillegas.com',
     'https://api-pi.thisisvillegas.com',
     ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:4200', 'http://localhost:3000'] : [])
 ];

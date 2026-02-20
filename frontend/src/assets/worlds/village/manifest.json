@@ -91,7 +91,7 @@
       "name": "Server Shack",
       "type": "app",
       "appRoute": "/server",
-      "requiresAuth": true,
+      "requiresAuth": false,
       "description": "Live server stats"
     },
     {

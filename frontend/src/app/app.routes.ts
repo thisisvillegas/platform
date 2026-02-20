@@ -69,8 +69,7 @@ export const routes: Routes = [
     },
     {
         path: 'server',
-        loadComponent: () => import('./pages/server/server.component').then(m => m.ServerComponent),
-        canActivate: [AuthGuard]
+        loadComponent: () => import('./pages/server/server.component').then(m => m.ServerComponent)
     },
     {
         path: 'pass-manager',
