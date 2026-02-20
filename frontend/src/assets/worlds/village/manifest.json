@@ -57,17 +57,17 @@
     {
       "id": "war-room",
       "name": "The War Room",
-      "type": "app",
-      "appRoute": "/tactiqal",
-      "requiresAuth": true,
+      "type": "external",
+      "appUrl": "https://tactiqal.thisisvillegas.com",
+      "requiresAuth": false,
       "description": "Tactical planning tool"
     },
     {
       "id": "greenhouse",
       "name": "The Greenhouse",
-      "type": "app",
-      "appRoute": "/rootine",
-      "requiresAuth": true,
+      "type": "external",
+      "appUrl": "https://rootine.thisisvillegas.com",
+      "requiresAuth": false,
       "description": "Routine & habit tracking"
     },
     {
