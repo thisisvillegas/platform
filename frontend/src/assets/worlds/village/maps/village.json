@@ -24657,6 +24657,29 @@
               "value": ""
             }
           ]
+        },
+        {
+          "id": 22,
+          "name": "door-holochronicle",
+          "type": "door",
+          "x": 432,
+          "y": 544,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "buildingId",
+              "type": "string",
+              "value": "holochronicle"
+            },
+            {
+              "name": "buildingName",
+              "type": "string",
+              "value": "The Archives"
+            }
+          ]
         }
       ]
     }

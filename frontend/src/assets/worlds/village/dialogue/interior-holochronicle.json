@@ -1,0 +1,46 @@
+{
+  "id": "interior-holochronicle",
+  "startNodeId": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Archivist",
+      "text": "Ah, a visitor. Welcome to the Archives. Every story in the galaxy, catalogued and preserved in proper chronological order.",
+      "choices": [
+        { "text": "What is this place?", "nextNodeId": "about" },
+        { "text": "Show me the timeline", "nextNodeId": "timeline" },
+        { "text": "I'll explore on my own", "nextNodeId": "explore" }
+      ]
+    },
+    {
+      "id": "about",
+      "speaker": "Archivist",
+      "text": [
+        "This is the Holochronicle — a complete record of the Star Wars canon timeline.",
+        "Films, series, novels, comics... every piece of the saga, mapped from the dawn of the High Republic to the rise of the First Order.",
+        "The holocrons hold the knowledge. The timeline reveals the connections."
+      ],
+      "choices": [
+        { "text": "Show me the timeline", "nextNodeId": "timeline" },
+        { "text": "Impressive work", "nextNodeId": "farewell" }
+      ]
+    },
+    {
+      "id": "timeline",
+      "speaker": "Archivist",
+      "text": "The portal is to my right. Step through and the full timeline awaits — every era, every story, in its proper place. May the Force guide your path.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "explore",
+      "speaker": "Archivist",
+      "text": "Take your time. The Archives are patient. When you're ready, the portal on the right will transport you to the full timeline. The knowledge isn't going anywhere.",
+      "nextNodeId": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Archivist",
+      "text": "Press ESC to return to the village. The Archives will be here when you need them."
+    }
+  ]
+}

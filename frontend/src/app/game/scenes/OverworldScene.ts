@@ -116,7 +116,7 @@ export class OverworldScene extends Phaser.Scene {
       'interior-smart-home', 'interior-war-room',
       'interior-greenhouse', 'interior-desaogo',
       'interior-gridup', 'interior-server-shack', 'interior-about-house',
-      'interior-plaza'
+      'interior-plaza', 'interior-holochronicle'
     ];
     for (const id of interiorIds) {
       this.load.json(`dialogue-${id}`, `${dialogueBase}/${id}.json`);

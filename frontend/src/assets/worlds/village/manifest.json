@@ -108,6 +108,14 @@
       "appUrl": "https://plaza.thisisvillegas.com",
       "requiresAuth": false,
       "description": "Plaza - Community platform"
+    },
+    {
+      "id": "holochronicle",
+      "name": "The Archives",
+      "type": "external",
+      "appUrl": "https://holochronicle.thisisvillegas.com",
+      "requiresAuth": false,
+      "description": "Star Wars Canon Timeline"
     }
   ],
   "npcs": [
@@ -264,6 +272,23 @@
         { "type": "table", "tileX": 6, "tileY": 4 },
         { "type": "poster", "tileX": 4, "tileY": 2 },
         { "type": "poster", "tileX": 8, "tileY": 2 },
+        { "type": "lamp", "tileX": 1, "tileY": 8 }
+      ]
+    },
+    "holochronicle": {
+      "roomWidth": 12,
+      "roomHeight": 10,
+      "floorColor": "#0a0a14",
+      "wallColor": "#1a1a2e",
+      "accentColor": "#4488ff",
+      "npc": { "name": "Archivist", "spriteKey": "npc-archivist", "dialogueId": "interior-holochronicle", "tileX": 3, "tileY": 4 },
+      "portal": { "tileX": 9, "tileY": 4, "label": "Holochronicle", "glowColor": "#4488ff" },
+      "decorations": [
+        { "type": "bookshelf", "tileX": 1, "tileY": 2 },
+        { "type": "bookshelf", "tileX": 3, "tileY": 2 },
+        { "type": "monitor", "tileX": 6, "tileY": 2 },
+        { "type": "monitor", "tileX": 8, "tileY": 2 },
+        { "type": "lamp", "tileX": 11, "tileY": 2 },
         { "type": "lamp", "tileX": 1, "tileY": 8 }
       ]
     }

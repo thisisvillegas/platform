@@ -56,6 +56,12 @@ export class ProjectsComponent {
       icon: '💬'
     },
     {
+      name: 'Holochronicle',
+      description: 'Star Wars Canon Timeline explorer — films, series, novels, and comics in chronological order.',
+      externalUrl: 'https://holochronicle.thisisvillegas.com',
+      icon: '⚔️'
+    },
+    {
       name: 'Server Stats',
       description: 'Real-time Raspberry Pi server monitoring — CPU, memory, disk, network, and processes.',
       route: '/dashboard',
