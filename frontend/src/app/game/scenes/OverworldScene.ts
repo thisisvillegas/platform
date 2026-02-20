@@ -1079,7 +1079,12 @@ export class OverworldScene extends Phaser.Scene {
     // Close any open modal
     this.closeCodeModal();
 
-    // Final progress save
+    // Final progress save — use synchronous localStorage save so it completes
+    // before the scene is destroyed; also fire async server save as best-effort
+    this.saveProgressLocal();
     this.saveProgress();
+
+    // Reset ready flag so achievements don't fire during next create() before progress loads
+    this.achievementsReady = false;
   }
 }
