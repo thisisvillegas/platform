@@ -9,7 +9,7 @@ export class CinematicScene extends Phaser.Scene {
   private enterButtonBg!: Phaser.GameObjects.Rectangle;
   private enterButtonText!: Phaser.GameObjects.Text;
 
-  private fullText = 'Built by a human. Powered by Claude. Enter the world.';
+  private fullText = 'This isn\'t a normal portfolio site.\n\nNo grid of project cards. No "download my resume" button. Instead, you\'re about to walk into a pixel-art village where every building is an app I actually built.\n\nTalk to the NPCs — they\'re weirdly helpful for 16-pixel beings. Find the hidden code fragments. Unlock achievements, because apparently I can\'t ship anything without a progression system.\n\nWander wherever you want. There\'s no wrong way to explore.\n\nReady?';
   private currentCharIndex = 0;
   private typewriterTimer?: Phaser.Time.TimerEvent;
   private isTransitioning = false;
@@ -65,14 +65,15 @@ export class CinematicScene extends Phaser.Scene {
     // Create typewriter text (initially empty)
     this.typewriterText = this.add.text(
       width / 2,
-      height / 2 - 40,
+      height / 2 - 60,
       '',
       {
-        fontSize: '20px',
+        fontSize: '15px',
         color: '#00ffff',
         fontFamily: 'monospace',
         align: 'center',
-        wordWrap: { width: width - 100 }
+        lineSpacing: 4,
+        wordWrap: { width: width - 120 }
       }
     ).setOrigin(0.5);
 
@@ -83,7 +84,7 @@ export class CinematicScene extends Phaser.Scene {
   private startTypewriter(): void {
     this.currentCharIndex = 0;
     this.typewriterTimer = this.time.addEvent({
-      delay: 50,
+      delay: 35,
       callback: this.revealNextCharacter,
       callbackScope: this,
       repeat: this.fullText.length - 1
@@ -216,7 +217,8 @@ export class CinematicScene extends Phaser.Scene {
 
     // Reposition elements on resize
     if (this.typewriterText) {
-      this.typewriterText.setPosition(width / 2, height / 2 - 40);
+      this.typewriterText.setPosition(width / 2, height / 2 - 60);
+      this.typewriterText.setWordWrapWidth(width - 120);
     }
 
     if (this.enterButton) {
