@@ -324,12 +324,32 @@ export class DialogueBox {
     this.continueIndicator.setVisible(false);
 
     const cam = this.scene.cameras.main;
-    const boxY = cam.height - this.BOX_HEIGHT;
-    const startY = boxY + 60;
+    const numChoices = Math.min(this.choices.length, 4);
+    const choiceLineH = isTouchDevice() ? 22 : 20;
+    const choicesHeight = numChoices * choiceLineH;
 
-    for (let i = 0; i < this.choices.length && i < 4; i++) {
+    // Calculate body text height (how much vertical space the dialogue text uses)
+    const bodyHeight = this.bodyText.height;
+
+    // Expand the box upward to fit: name(20) + body + gap(8) + choices + padding(12)
+    const neededHeight = 20 + bodyHeight + 8 + choicesHeight + 12;
+    const expandedHeight = Math.max(this.BOX_HEIGHT, neededHeight);
+
+    // Reposition box elements for the expanded size
+    const boxY = cam.height - expandedHeight;
+    this.border.setPosition(cam.width / 2, boxY + expandedHeight / 2);
+    this.border.setSize(cam.width - 16, expandedHeight - 4);
+    this.background.setPosition(cam.width / 2, boxY + expandedHeight / 2);
+    this.background.setSize(cam.width - 20, expandedHeight - 8);
+    this.nameText.setPosition(16, boxY + 6);
+    this.bodyText.setPosition(16, boxY + 24);
+
+    // Position choices right after the body text
+    const choiceStartY = boxY + 24 + bodyHeight + 8;
+
+    for (let i = 0; i < numChoices; i++) {
       const choiceText = this.scene.add.text(
-        32, startY + i * 18,
+        32, choiceStartY + i * choiceLineH,
         `${i + 1}. ${this.choices[i].text}`,
         {
           fontSize: '11px',
@@ -402,6 +422,23 @@ export class DialogueBox {
     this.choiceTexts = [];
     this.isShowingChoices = false;
     this.selectedChoiceIndex = 0;
+
+    // Reset box to default dimensions
+    this.resetBoxLayout();
+  }
+
+  /** Restore box dimensions and element positions to default (non-choice) layout. */
+  private resetBoxLayout(): void {
+    const cam = this.scene.cameras.main;
+    const boxY = cam.height - this.BOX_HEIGHT;
+    this.border.setPosition(cam.width / 2, boxY + this.BOX_HEIGHT / 2);
+    this.border.setSize(cam.width - 16, this.BOX_HEIGHT - 4);
+    this.background.setPosition(cam.width / 2, boxY + this.BOX_HEIGHT / 2);
+    this.background.setSize(cam.width - 20, this.BOX_HEIGHT - 8);
+    this.nameText.setPosition(16, boxY + 6);
+    this.bodyText.setPosition(16, boxY + 24);
+    this.continueIndicator.setPosition(cam.width - 24, boxY + this.BOX_HEIGHT - 18);
+    this.pageIndicator.setPosition(cam.width - 60, boxY + 6);
   }
 
   private updatePageIndicator(): void {
