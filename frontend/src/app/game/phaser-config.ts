@@ -33,6 +33,9 @@ export function createPhaserConfig(parent: string, initialScene?: string): Phase
         debug: false
       }
     },
+    input: {
+      activePointers: 2 // Support multi-touch (joystick + action button simultaneously)
+    },
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,

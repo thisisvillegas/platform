@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 
 /**
  * Manages player sprite, input handling, and walk animations.
- * Desktop-only: WASD + arrow keys, no touch/joystick support.
+ * Supports keyboard (WASD + arrow keys) and touch joystick input.
  *
  * Lifecycle: construct → preload() → create(x, y) → update() each frame
  */
@@ -13,6 +13,10 @@ export class PlayerController {
 
   public sprite!: Phaser.Physics.Arcade.Sprite;
   public speed: number;
+
+  // External joystick input (set by MobileControls)
+  public joystickDx = 0;
+  public joystickDy = 0;
 
   constructor(scene: Phaser.Scene, speed = 100) {
     this.scene = scene;
@@ -40,10 +44,10 @@ export class PlayerController {
   update(): void {
     if (!this.sprite?.body) return;
 
-    const left = this.cursors.left.isDown || this.wasd.A.isDown;
-    const right = this.cursors.right.isDown || this.wasd.D.isDown;
-    const up = this.cursors.up.isDown || this.wasd.W.isDown;
-    const down = this.cursors.down.isDown || this.wasd.S.isDown;
+    const left = this.cursors.left.isDown || this.wasd.A.isDown || this.joystickDx < -0.1;
+    const right = this.cursors.right.isDown || this.wasd.D.isDown || this.joystickDx > 0.1;
+    const up = this.cursors.up.isDown || this.wasd.W.isDown || this.joystickDy < -0.1;
+    const down = this.cursors.down.isDown || this.wasd.S.isDown || this.joystickDy > 0.1;
 
     this.sprite.setVelocity(0);
 

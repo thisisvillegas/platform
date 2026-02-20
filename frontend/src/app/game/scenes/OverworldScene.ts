@@ -17,6 +17,7 @@ import { SecretsManager, Collectible } from '../systems/SecretsManager';
 import { AchievementEngine, GameState } from '../systems/AchievementEngine';
 import { AchievementToast } from '../ui/AchievementToast';
 import { CollectiblesPanel } from '../ui/CollectiblesPanel';
+import { MobileControls, isTouchDevice } from '../ui/MobileControls';
 import { environment } from '../../../environments/environment';
 
 interface ManifestJSON {
@@ -40,6 +41,7 @@ export class OverworldScene extends Phaser.Scene {
   private achievementToast!: AchievementToast;
   private collectiblesPanel!: CollectiblesPanel;
   private themeToggleButton!: Phaser.GameObjects.Text;
+  private mobileControls!: MobileControls;
   private spawnX?: number;
   private spawnY?: number;
   private codeModal: Phaser.GameObjects.Container | null = null;
@@ -222,8 +224,13 @@ export class OverworldScene extends Phaser.Scene {
     // Dialogue box
     this.dialogueBox = new DialogueBox(this);
 
+    // Mobile controls (only renders on touch devices)
+    this.mobileControls = new MobileControls(this);
+    this.mobileControls.onMenu = () => this.toggleCollectiblesPanel();
+
     // NPC interaction prompt (shown/hidden based on proximity)
-    this.npcPrompt = this.add.text(0, 0, 'Press SPACE to talk', {
+    const promptText = isTouchDevice() ? 'Tap A to talk' : 'Press SPACE to talk';
+    this.npcPrompt = this.add.text(0, 0, promptText, {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#000000aa',
@@ -313,7 +320,12 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private showOnboarding(): void {
-    const steps = [
+    const touch = isTouchDevice();
+    const steps = touch ? [
+      'Use the joystick to move',
+      'Walk to NPCs and tap A to talk',
+      'Explore buildings by walking to doors'
+    ] : [
       'Use WASD or arrow keys to move',
       'Walk to NPCs and press SPACE to talk',
       'Explore buildings by walking to doors'
@@ -656,33 +668,54 @@ export class OverworldScene extends Phaser.Scene {
     // Theme particles must track camera every frame regardless of dialogue state
     this.themeEngine?.update();
 
+    // Update mobile controls edge detection
+    this.mobileControls.update();
+
+    // Feed joystick input to player controller
+    this.playerController.joystickDx = this.mobileControls.dx;
+    this.playerController.joystickDy = this.mobileControls.dy;
+
     // Dialogue mode: DialogueBox handles all input including its own ESC
     if (this.dialogueActive) {
+      // Feed mobile action button to dialogue advance
+      if (this.mobileControls.actionPressed) {
+        this.dialogueBox.externalAdvance = true;
+      }
       this.dialogueBox.update();
       this.interactionSystem.syncKeys();
+      this.mobileControls.setVisible(false);
       return;
     }
 
-    // Code modal: close on ESC or SPACE (centralized here, not via event handlers)
+    // Code modal: close on ESC or SPACE or mobile action
     if (this.codeModal) {
       if (Phaser.Input.Keyboard.JustDown(this.escKey) ||
-          Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+          Phaser.Input.Keyboard.JustDown(this.interactKey) ||
+          this.mobileControls.actionPressed) {
         this.closeCodeModal();
       }
       this.interactionSystem.syncKeys();
+      this.mobileControls.setVisible(false);
       return;
     }
 
-    // Collectibles panel: close on ESC
+    // Collectibles panel: close on ESC or mobile menu
     if (this.collectiblesPanel.getIsVisible()) {
       if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
         this.collectiblesPanel.hide();
       }
       this.interactionSystem.syncKeys();
+      this.mobileControls.setVisible(false);
       return;
     }
 
-    // Normal gameplay
+    // Show mobile controls during normal gameplay
+    this.mobileControls.setVisible(true);
+
+    // Normal gameplay — feed mobile action to interaction system for door entry
+    if (this.mobileControls.actionPressed) {
+      this.interactionSystem.externalAction = true;
+    }
     this.playerController.update();
     this.interactionSystem.update();
 
@@ -716,8 +749,8 @@ export class OverworldScene extends Phaser.Scene {
       this.npcPrompt!.setPosition(closestNPC.x, closestNPC.y - 20);
       this.npcPrompt!.setVisible(true);
 
-      // Check for interaction key press
-      const interactPressed = this.interactKey.isDown && !this.interactWasDown;
+      // Check for interaction key press (keyboard or mobile action button)
+      const interactPressed = (this.interactKey.isDown && !this.interactWasDown) || this.mobileControls.actionPressed;
       this.interactWasDown = this.interactKey.isDown;
 
       if (interactPressed) {
@@ -997,6 +1030,9 @@ export class OverworldScene extends Phaser.Scene {
 
     // Clean up ThemeEngine (its own resize handler + particles + audio)
     this.themeEngine?.destroy();
+
+    // Clean up mobile controls
+    this.mobileControls?.destroy();
 
     // Close any open modal
     this.closeCodeModal();

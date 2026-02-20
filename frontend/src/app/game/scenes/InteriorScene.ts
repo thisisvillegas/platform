@@ -6,6 +6,7 @@ import { InteriorConfig } from '../types/WorldPack';
 import { DialogueBox } from '../ui/DialogueBox';
 import { DialogueTree, DialogueTreeData, DialogueNode } from '../dialogue/DialogueTree';
 import { Portal } from '../entities/Portal';
+import { MobileControls, isTouchDevice } from '../ui/MobileControls';
 
 interface InteriorData {
   buildingId: string;
@@ -75,6 +76,9 @@ export class InteriorScene extends Phaser.Scene {
   // ── Dialogue ──────────────────────────────
   private dialogueBox: DialogueBox | null = null;
   private currentDialogueTree: DialogueTree | null = null;
+
+  // ── Mobile ──────────────────────────────────
+  private mobileControls: MobileControls | null = null;
 
   // ── State ───────────────────────────────────
   private dialogueActive = false;
@@ -273,6 +277,19 @@ export class InteriorScene extends Phaser.Scene {
     // ── DialogueBox ─────────────────────────
     this.dialogueBox = new DialogueBox(this);
 
+    // ── Mobile Controls ───────────────────────
+    this.mobileControls = new MobileControls(this);
+    this.mobileControls.onMenu = () => this.returnToOverworld();
+
+    // Update prompts for touch devices
+    if (isTouchDevice()) {
+      if (this.exitPrompt) this.exitPrompt.setText('Tap A to leave');
+      if (this.npcPrompt) this.npcPrompt.setText('Tap A to talk');
+      if (this.portalPrompt && this.interiorConfig?.portal) {
+        this.portalPrompt.setText(`Tap A to launch ${this.interiorConfig.portal.label}`);
+      }
+    }
+
     // ── Input ────────────────────────────────
     this.escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this.enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
@@ -285,14 +302,30 @@ export class InteriorScene extends Phaser.Scene {
   private updateWalkable(): void {
     if (!this.playerController || !this.roomLayout) return;
 
+    // Update mobile controls
+    this.mobileControls?.update();
+
+    // Feed joystick to player controller
+    if (this.mobileControls) {
+      this.playerController.joystickDx = this.mobileControls.dx;
+      this.playerController.joystickDy = this.mobileControls.dy;
+    }
+
     // ── Dialogue mode (DialogueBox handles ESC + input) ──
     if (this.dialogueActive) {
+      if (this.mobileControls?.actionPressed) {
+        this.dialogueBox!.externalAdvance = true;
+      }
       this.dialogueBox?.update();
       // Keep key state in sync while dialogue is active
       this.enterWasDown = this.enterKey.isDown;
       this.spaceWasDown = this.spaceKey.isDown;
+      this.mobileControls?.setVisible(false);
       return;
     }
+
+    // Show mobile controls during normal gameplay
+    this.mobileControls?.setVisible(true);
 
     // ESC = instant exit
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
@@ -303,6 +336,7 @@ export class InteriorScene extends Phaser.Scene {
     // Edge detection for ENTER and SPACE
     const enterPressed = this.enterKey.isDown && !this.enterWasDown;
     const spacePressed = this.spaceKey.isDown && !this.spaceWasDown;
+    const mobileAction = this.mobileControls?.actionPressed ?? false;
     this.enterWasDown = this.enterKey.isDown;
     this.spaceWasDown = this.spaceKey.isDown;
 
@@ -319,7 +353,7 @@ export class InteriorScene extends Phaser.Scene {
       const nearNPC = npcDist < 32;
       this.npcPrompt?.setVisible(nearNPC);
 
-      if (spacePressed && nearNPC) {
+      if ((spacePressed || mobileAction) && nearNPC) {
         this.startInteriorDialogue();
         return;
       }
@@ -333,7 +367,7 @@ export class InteriorScene extends Phaser.Scene {
       const nearPortal = portalDist < 40;
       this.portalPrompt?.setVisible(nearPortal);
 
-      if (enterPressed && nearPortal) {
+      if ((enterPressed || mobileAction) && nearPortal) {
         if (this.requiresAuth && this.isGuestUser()) {
           this.showAuthWarning();
           return;
@@ -351,7 +385,7 @@ export class InteriorScene extends Phaser.Scene {
     const nearExit = exitDist < 28;
     this.exitPrompt!.setVisible(nearExit);
 
-    if (enterPressed && nearExit) {
+    if ((enterPressed || mobileAction) && nearExit) {
       this.returnToOverworld();
       return;
     }
@@ -505,11 +539,24 @@ export class InteriorScene extends Phaser.Scene {
         break;
     }
 
-    this.add.text(centerX, centerY + 120, 'Press ESC to go back outside', {
-      fontSize: '14px',
-      color: '#8888bb',
-      fontFamily: 'monospace'
-    }).setOrigin(0.5);
+    if (isTouchDevice()) {
+      // Tappable back button for mobile
+      const backBtn = this.add.text(centerX, centerY + 120, '← Back Outside', {
+        fontSize: '16px',
+        color: '#00ffff',
+        fontFamily: 'monospace',
+        backgroundColor: '#00ffff22',
+        padding: { x: 16, y: 8 }
+      }).setOrigin(0.5);
+      backBtn.setInteractive({ useHandCursor: true });
+      backBtn.on('pointerdown', () => this.returnToOverworld());
+    } else {
+      this.add.text(centerX, centerY + 120, 'Press ESC to go back outside', {
+        fontSize: '14px',
+        color: '#8888bb',
+        fontFamily: 'monospace'
+      }).setOrigin(0.5);
+    }
 
     this.escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this.enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);

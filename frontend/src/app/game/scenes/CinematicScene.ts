@@ -62,18 +62,19 @@ export class CinematicScene extends Phaser.Scene {
       }
     });
 
-    // Create typewriter text (initially empty)
+    // Create typewriter text (initially empty, responsive sizing)
+    const isSmall = width < 500;
     this.typewriterText = this.add.text(
       width / 2,
       height / 2 - 60,
       '',
       {
-        fontSize: '15px',
+        fontSize: isSmall ? '12px' : '15px',
         color: '#00ffff',
         fontFamily: 'monospace',
         align: 'center',
-        lineSpacing: 4,
-        wordWrap: { width: width - 120 }
+        lineSpacing: isSmall ? 3 : 4,
+        wordWrap: { width: width - (isSmall ? 40 : 120) }
       }
     ).setOrigin(0.5);
 
@@ -107,16 +108,17 @@ export class CinematicScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    // Create button container
-    this.enterButton = this.add.container(width / 2, height - 100);
+    // Create button container (larger on mobile for easy tapping)
+    const btnSmall = width < 500;
+    this.enterButton = this.add.container(width / 2, height - (btnSmall ? 70 : 100));
 
     // Button background
-    this.enterButtonBg = this.add.rectangle(0, 0, 200, 60, 0x00ffff, 0.2);
+    this.enterButtonBg = this.add.rectangle(0, 0, btnSmall ? 220 : 200, btnSmall ? 70 : 60, 0x00ffff, 0.2);
     this.enterButtonBg.setStrokeStyle(2, 0x00ffff);
 
     // Button text
     this.enterButtonText = this.add.text(0, 0, '⏎ ENTER', {
-      fontSize: '24px',
+      fontSize: btnSmall ? '28px' : '24px',
       color: '#00ffff',
       fontFamily: 'monospace'
     }).setOrigin(0.5);

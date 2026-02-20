@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { isTouchDevice } from './MobileControls';
 
 export interface DialogueChoice {
   text: string;
@@ -11,6 +12,7 @@ export interface DialogueChoice {
  *
  * Uses camera scrollFactor(0) so it stays fixed on screen.
  * Input: SPACE/ENTER to advance or instant-complete text.
+ * Touch: tap dialogue box to advance, tap choices to select.
  * Choices: arrow keys or number keys (1-4) to select.
  */
 export class DialogueBox {
@@ -52,6 +54,9 @@ export class DialogueBox {
   private enterWasDown = false;
   private upWasDown = false;
   private downWasDown = false;
+
+  // External action trigger (from MobileControls)
+  public externalAdvance = false;
 
   // State
   private isVisible = false;
@@ -128,6 +133,16 @@ export class DialogueBox {
     this.container.setScrollFactor(0);
     this.container.setVisible(false);
 
+    // Tap-to-advance: make background interactive for touch
+    if (isTouchDevice()) {
+      this.background.setInteractive();
+      this.background.on('pointerdown', () => {
+        if (!this.isVisible) return;
+        if (this.isShowingChoices) return; // Don't advance when choices are shown
+        this.externalAdvance = true;
+      });
+    }
+
     // Input keys
     const kb = scene.input.keyboard!;
     this.spaceKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -198,7 +213,8 @@ export class DialogueBox {
     this.upWasDown = this.upKey.isDown;
     this.downWasDown = this.downKey.isDown;
 
-    const advance = spacePressed || enterPressed;
+    const advance = spacePressed || enterPressed || this.externalAdvance;
+    this.externalAdvance = false;
 
     // ESC closes dialogue immediately
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
@@ -313,14 +329,21 @@ export class DialogueBox {
 
     for (let i = 0; i < this.choices.length && i < 4; i++) {
       const choiceText = this.scene.add.text(
-        32, startY + i * 16,
+        32, startY + i * 18,
         `${i + 1}. ${this.choices[i].text}`,
         {
           fontSize: '11px',
           color: i === 0 ? '#fbbf24' : '#aaaacc',
-          fontFamily: 'monospace'
+          fontFamily: 'monospace',
+          padding: isTouchDevice() ? { y: 2 } : undefined
         }
       );
+      // Tap-to-select on touch devices
+      if (isTouchDevice()) {
+        choiceText.setInteractive({ useHandCursor: true });
+        const idx = i;
+        choiceText.on('pointerdown', () => this.selectChoice(idx));
+      }
       this.container.add(choiceText);
       this.choiceTexts.push(choiceText);
     }

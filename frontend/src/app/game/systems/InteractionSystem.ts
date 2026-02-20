@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { isTouchDevice } from '../ui/MobileControls';
 
 interface Interactable {
   x: number;
@@ -19,6 +20,9 @@ export class InteractionSystem {
   private spaceWasDown = false;
   private readonly PROXIMITY_RADIUS = 32;
 
+  // External trigger from MobileControls action button
+  public externalAction = false;
+
   constructor(scene: Phaser.Scene, player: Phaser.GameObjects.Sprite) {
     this.scene = scene;
     this.player = player;
@@ -33,7 +37,9 @@ export class InteractionSystem {
     callback: (data: Record<string, unknown>) => void,
     promptText = 'Press Enter'
   ): void {
-    const prompt = this.scene.add.text(x, y - 24, promptText, {
+    // On touch devices, show mobile-friendly prompt
+    const displayText = isTouchDevice() ? promptText.replace(/Press Enter/i, 'Tap A') : promptText;
+    const prompt = this.scene.add.text(x, y - 24, displayText, {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#000000aa',
@@ -79,7 +85,10 @@ export class InteractionSystem {
     this.enterWasDown = this.enterKey.isDown;
     this.spaceWasDown = this.spaceKey.isDown;
 
-    if (this.activeInteractable && (enterPressed || spacePressed)) {
+    const triggered = enterPressed || spacePressed || this.externalAction;
+    this.externalAction = false;
+
+    if (this.activeInteractable && triggered) {
       this.activeInteractable.callback(this.activeInteractable.data);
     }
   }
