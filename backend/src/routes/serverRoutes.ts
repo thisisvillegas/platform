@@ -7,6 +7,100 @@ const router = Router();
 
 let prevNetStats: { [key: string]: { rx: number; tx: number; time: number } } = {};
 
+/*
+ * The Pi's schedule, for hub.thisisvillegas.com (2026-11-10): the crontab of the user this process runs as, the
+ * systemd services and timers that are not part of Raspberry Pi OS itself, and every failed service. Read live on
+ * each call so the hub never drifts from the box. `services` (the count of running services) is unchanged; the
+ * new fields are `cron` and `systemd`.
+ */
+// --- schedule parsers ---
+type CronJob = { schedule: string; command: string; name: string | null };
+type SystemdUnit = { name: string; description: string; state: string; scope: "system" | "user" };
+type SystemdTimer = { name: string; activates: string; next: string | null; last: string | null };
+
+/** Units Raspberry Pi OS (Bookworm/Trixie desktop image) runs on its own, system and user manager alike. Everything
+ *  else was put there on purpose and the hub lists it; a failed unit is listed whatever its name. When a stock unit
+ *  shows up on the hub, add it here. */
+const STOCK_UNITS = new Set([
+    "accounts-daemon", "alsa-restore", "alsa-state", "apt-daily", "apt-daily-upgrade", "avahi-daemon", "bluetooth",
+    "colord", "console-setup", "cron", "cups", "cups-browsed", "dbus", "dconf", "dphys-swapfile", "dpkg-db-backup",
+    "e2scrub_all", "fake-hwclock", "filter-chain", "fstrim", "hciuart", "keyboard-setup", "lightdm", "logrotate",
+    "man-db", "ModemManager", "mpris-proxy", "NetworkManager", "nfs-blkmap", "packagekit", "pipewire",
+    "pipewire-pulse", "polkit", "pulseaudio", "raspberrypi-net-mods", "rpcbind", "rpi-eeprom-update", "rsyslog",
+    "rtkit-daemon", "ssh", "triggerhappy", "udisks2", "upower", "wireplumber", "wpa_supplicant"
+]);
+const STOCK_UNIT_PATTERNS = [
+    /^getty@/, /^serial-getty@/, /^user@/, /^user-runtime-dir@/, /^modprobe@/, /^ifup@/, /^systemd-/, /^plymouth/,
+    /^at-spi/, /^evolution-/, /^gnome-/, /^gvfs-/, /^tracker-/, /^xdg-/
+];
+const isStockUnit = (unit: string): boolean => {
+    const name = unit.replace(/\.(service|timer)$/, "");
+    return STOCK_UNITS.has(name) || STOCK_UNIT_PATTERNS.some(p => p.test(name));
+};
+
+/** `crontab -l` as one entry per active job, in file order. Blank lines, comments (a job disabled with a leading #
+ *  included) and VAR=value lines are skipped. A trailing ` # name` on the command, the convention in this crontab,
+ *  becomes `name`; the schedule is kept as the cron expression it is. */
+function parseCrontab(text: string): CronJob[] {
+    const jobs: CronJob[] = [];
+    for (const raw of text.split("\n")) {
+        const line = raw.trim();
+        if (!line || line.startsWith("#") || /^[A-Za-z_][A-Za-z0-9_]*=/.test(line)) continue;
+        const m = line.match(/^(@\w+|(?:\S+\s+){4}\S+)\s+(.+)$/);
+        if (!m) continue;
+        let command = m[2].trim();
+        let name: string | null = null;
+        const tail = command.match(/^(.*\S)\s+#\s*(\S[^#]*?)\s*$/);
+        if (tail) {
+            command = tail[1];
+            name = tail[2];
+        }
+        jobs.push({ schedule: m[1].replace(/\s+/g, " "), command, name });
+    }
+    return jobs;
+}
+
+const jsonRows = (text: string): any[] => {
+    try {
+        const rows = JSON.parse(text);
+        return Array.isArray(rows) ? rows : [];
+    } catch {
+        return [];
+    }
+};
+
+/** `systemctl list-units --type=service -o json` → the non-stock running services plus every failed one. */
+function parseUnits(text: string, scope: "system" | "user"): SystemdUnit[] {
+    return jsonRows(text)
+        .filter(u => typeof u?.unit === "string" && (u.active === "failed" || u.sub === "failed" || !isStockUnit(u.unit)))
+        .map(u => ({
+            name: String(u.unit).replace(/\.service$/, ""),
+            description: String(u.description ?? ""),
+            state: u.active === "failed" ? "failed" : String(u.sub ?? u.active ?? ""),
+            scope
+        }));
+}
+
+/** systemd's JSON carries timestamps in microseconds since the epoch; 0 or missing means never. */
+const usecToIso = (v: unknown): string | null =>
+    typeof v === "number" && v > 0 ? new Date(Math.floor(v / 1000)).toISOString() : null;
+
+/** `systemctl list-timers --all -o json` → the non-stock timers with their next and last run. */
+function parseTimers(text: string): SystemdTimer[] {
+    return jsonRows(text)
+        .filter(t => typeof t?.unit === "string" && !isStockUnit(t.unit))
+        .map(t => ({
+            name: String(t.unit).replace(/\.timer$/, ""),
+            activates: String(t.activates ?? ""),
+            next: usecToIso(t.next),
+            last: usecToIso(t.last)
+        }));
+}
+// --- end schedule parsers ---
+
+/** `systemctl --user` needs the user manager's runtime dir; PM2 does not always pass it on. */
+const uid = typeof process.getuid === "function" ? process.getuid() : 1000;
+
 router.get("/stats", async (req: Request, res: Response) => {
     try {
         const now = Date.now();
@@ -24,7 +118,11 @@ router.get("/stats", async (req: Request, res: Response) => {
             cpuFreqResult,
             netstatResult,
             servicesResult,
-            pm2Result
+            pm2Result,
+            cronResult,
+            unitsResult,
+            userUnitsResult,
+            timersResult
         ] = await Promise.all([
             execAsync("cat /proc/loadavg"),
             execAsync("cat /proc/meminfo"),
@@ -38,7 +136,13 @@ router.get("/stats", async (req: Request, res: Response) => {
             execAsync("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || echo 0"),
             execAsync("ss -tun state established 2>/dev/null | wc -l"),
             execAsync("systemctl list-units --type=service --state=running --no-pager --no-legend 2>/dev/null | wc -l"),
-            execAsync("pm2 jlist 2>/dev/null || echo []")
+            execAsync("pm2 jlist 2>/dev/null || echo []"),
+            // Schedule (see the parsers above). Each command answers something on every exit code so one missing
+            // crontab or user manager never fails the whole stats call.
+            execAsync("crontab -l 2>/dev/null || true"),
+            execAsync("systemctl list-units --type=service --state=running,failed --no-pager -o json 2>/dev/null || echo []"),
+            execAsync(`XDG_RUNTIME_DIR=/run/user/${uid} systemctl --user list-units --type=service --state=running,failed --no-pager -o json 2>/dev/null || echo []`),
+            execAsync("systemctl list-timers --all --no-pager -o json 2>/dev/null || echo []")
         ]);
 
         // Parse load average
@@ -143,6 +247,13 @@ router.get("/stats", async (req: Request, res: Response) => {
             restarts: app.pm2_env?.restart_time || 0
         }));
 
+        // Parse the schedule: crontab, then the non-stock systemd services (system first, then the user manager) and timers
+        const cron = parseCrontab(cronResult.stdout);
+        const systemd = {
+            services: [...parseUnits(unitsResult.stdout, "system"), ...parseUnits(userUnitsResult.stdout, "user")],
+            timers: parseTimers(timersResult.stdout)
+        };
+
         const stats = {
             timestamp: new Date().toISOString(),
             system: {
@@ -176,7 +287,9 @@ router.get("/stats", async (req: Request, res: Response) => {
             processes,
             claudeSessions,
             services: parseInt(servicesResult.stdout.trim(), 10),
-            pm2
+            pm2,
+            cron,
+            systemd
         };
 
         res.json(stats);
